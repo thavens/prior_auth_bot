@@ -1,0 +1,3133 @@
+{
+ "Resources": {
+  "DataBucketE3889A50": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "Tags": [
+     {
+      "Key": "aws-cdk:auto-delete-objects",
+      "Value": "true"
+     }
+    ],
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataBucket/Resource"
+   }
+  },
+  "DataBucketPolicy3231C704": {
+   "Type": "AWS::S3::BucketPolicy",
+   "Properties": {
+    "Bucket": {
+     "Ref": "DataBucketE3889A50"
+    },
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutBucketPolicy",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*"
+       ],
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::GetAtt": [
+          "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+          "Arn"
+         ]
+        }
+       },
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataBucket/Policy/Resource"
+   }
+  },
+  "DataBucketAutoDeleteObjectsCustomResource9FB51BF3": {
+   "Type": "Custom::S3AutoDeleteObjects",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "DataBucketE3889A50"
+    }
+   },
+   "DependsOn": [
+    "DataBucketPolicy3231C704"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataBucket/AutoDeleteObjectsCustomResource/Default"
+   }
+  },
+  "DataBucketNotifications11EB1C2E": {
+   "Type": "Custom::S3BucketNotifications",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "DataBucketE3889A50"
+    },
+    "NotificationConfiguration": {
+     "LambdaFunctionConfigurations": [
+      {
+       "Events": [
+        "s3:ObjectCreated:*"
+       ],
+       "Filter": {
+        "Key": {
+         "FilterRules": [
+          {
+           "Name": "suffix",
+           "Value": ".mp3"
+          },
+          {
+           "Name": "prefix",
+           "Value": "recordings/"
+          }
+         ]
+        }
+       },
+       "LambdaFunctionArn": {
+        "Fn::GetAtt": [
+         "TranscribeHandler8E4C16AC",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Events": [
+        "s3:ObjectCreated:*"
+       ],
+       "Filter": {
+        "Key": {
+         "FilterRules": [
+          {
+           "Name": "suffix",
+           "Value": ".wav"
+          },
+          {
+           "Name": "prefix",
+           "Value": "recordings/"
+          }
+         ]
+        }
+       },
+       "LambdaFunctionArn": {
+        "Fn::GetAtt": [
+         "TranscribeHandler8E4C16AC",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Events": [
+        "s3:ObjectCreated:*"
+       ],
+       "Filter": {
+        "Key": {
+         "FilterRules": [
+          {
+           "Name": "suffix",
+           "Value": ".flac"
+          },
+          {
+           "Name": "prefix",
+           "Value": "recordings/"
+          }
+         ]
+        }
+       },
+       "LambdaFunctionArn": {
+        "Fn::GetAtt": [
+         "TranscribeHandler8E4C16AC",
+         "Arn"
+        ]
+       }
+      }
+     ]
+    },
+    "Managed": true,
+    "SkipDestinationValidation": false
+   },
+   "DependsOn": [
+    "DataBucketAllowBucketNotificationsToPABotStackTranscribeHandler6067BE0377D9CA41",
+    "DataBucketPolicy3231C704"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataBucket/Notifications/Resource"
+   }
+  },
+  "DataBucketAllowBucketNotificationsToPABotStackTranscribeHandler6067BE0377D9CA41": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TranscribeHandler8E4C16AC",
+      "Arn"
+     ]
+    },
+    "Principal": "s3.amazonaws.com",
+    "SourceAccount": {
+     "Ref": "AWS::AccountId"
+    },
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "DataBucketE3889A50",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataBucket/AllowBucketNotificationsToPABotStackTranscribeHandler6067BE03"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Role"
+   }
+  },
+  "CustomS3AutoDeleteObjectsCustomResourceProviderHandler9D90184F": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Lambda function for auto-deleting objects in ",
+       {
+        "Ref": "DataBucketE3889A50"
+       },
+       " S3 bucket."
+      ]
+     ]
+    }
+   },
+   "DependsOn": [
+    "CustomS3AutoDeleteObjectsCustomResourceProviderRole3B1BD092"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/Custom::S3AutoDeleteObjectsCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.faa95a81ae7d7373f3e1f242268f904eb748d8d0fdd306e8a6fe515a1905a7d6",
+    "aws:asset:property": "Code"
+   }
+  },
+  "WebScrapeCache747DC311": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "provider_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "treatment_code",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "provider_id",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "treatment_code",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "pa-web-scrape-cache",
+    "TimeToLiveSpecification": {
+     "AttributeName": "expires_at",
+     "Enabled": true
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/WebScrapeCache/Resource"
+   }
+  },
+  "MemoriesE52D0152": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "memory_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "memory_type",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "document_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "created_at",
+      "AttributeType": "N"
+     },
+     {
+      "AttributeName": "provider_id",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "prescription_code",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "ByDocument",
+      "KeySchema": [
+       {
+        "AttributeName": "document_id",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "created_at",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     },
+     {
+      "IndexName": "ByProvider",
+      "KeySchema": [
+       {
+        "AttributeName": "provider_id",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "created_at",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     },
+     {
+      "IndexName": "ByPrescription",
+      "KeySchema": [
+       {
+        "AttributeName": "prescription_code",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "created_at",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "memory_id",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "memory_type",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "pa-memories"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/Memories/Resource"
+   }
+  },
+  "Tracking0CBED059": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "pa_request_id",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "pa_request_id",
+      "KeyType": "HASH"
+     }
+    ],
+    "TableName": "pa-tracking"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/Tracking/Resource"
+   }
+  },
+  "EncryptionPolicy": {
+   "Type": "AWS::OpenSearchServerless::SecurityPolicy",
+   "Properties": {
+    "Name": "pa-bot-vectors-enc",
+    "Policy": "{\"Rules\": [{\"ResourceType\": \"collection\", \"Resource\": [\"collection/pa-bot-vectors\"]}], \"AWSOwnedKey\": true}",
+    "Type": "encryption"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/EncryptionPolicy"
+   }
+  },
+  "NetworkPolicy": {
+   "Type": "AWS::OpenSearchServerless::SecurityPolicy",
+   "Properties": {
+    "Name": "pa-bot-vectors-net",
+    "Policy": "[{\"Rules\": [{\"ResourceType\": \"collection\", \"Resource\": [\"collection/pa-bot-vectors\"]}, {\"ResourceType\": \"dashboard\", \"Resource\": [\"collection/pa-bot-vectors\"]}], \"AllowFromPublic\": true}]",
+    "Type": "network"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/NetworkPolicy"
+   }
+  },
+  "VectorCollection": {
+   "Type": "AWS::OpenSearchServerless::Collection",
+   "Properties": {
+    "Name": "pa-bot-vectors",
+    "Type": "VECTORSEARCH"
+   },
+   "DependsOn": [
+    "EncryptionPolicy",
+    "NetworkPolicy"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/VectorCollection"
+   }
+  },
+  "DataAccessPolicy": {
+   "Type": "AWS::OpenSearchServerless::AccessPolicy",
+   "Properties": {
+    "Name": "pa-bot-vectors-access",
+    "Policy": {
+     "Fn::Join": [
+      "",
+      [
+       "[{\"Rules\": [{\"ResourceType\": \"collection\", \"Resource\": [\"collection/pa-bot-vectors\"], \"Permission\": [\"aoss:CreateCollectionItems\", \"aoss:UpdateCollectionItems\", \"aoss:DescribeCollectionItems\"]}, {\"ResourceType\": \"index\", \"Resource\": [\"index/pa-bot-vectors/*\"], \"Permission\": [\"aoss:CreateIndex\", \"aoss:UpdateIndex\", \"aoss:DescribeIndex\", \"aoss:ReadDocument\", \"aoss:WriteDocument\"]}], \"Principal\": [\"arn:aws:iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":root\"]}]"
+      ]
+     ]
+    },
+    "Type": "data"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DataAccessPolicy"
+   }
+  },
+  "PABotEmailIdentity": {
+   "Type": "AWS::SES::EmailIdentity",
+   "Properties": {
+    "EmailIdentity": "michael.lavery.2017@gmail.com"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PABotEmailIdentity"
+   }
+  },
+  "PABotNotificationsTopic25E08A70": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "TopicName": "pa-bot-notifications"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PABotNotificationsTopic/Resource"
+   }
+  },
+  "PABotNotificationsTopicmichaellavery2017gmailcom7237ADA9": {
+   "Type": "AWS::SNS::Subscription",
+   "Properties": {
+    "Endpoint": "michael.lavery.2017@gmail.com",
+    "Protocol": "email",
+    "TopicArn": {
+     "Ref": "PABotNotificationsTopic25E08A70"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PABotNotificationsTopic/michael.lavery.2017@gmail.com/Resource"
+   }
+  },
+  "SharedLayer27DFABF0": {
+   "Type": "AWS::Lambda::LayerVersion",
+   "Properties": {
+    "CompatibleRuntimes": [
+     "python3.12"
+    ],
+    "Content": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "abe4e58d2bdf841c6a7c4051118b03bb45bbbf069340e195f9edfb5901256059.zip"
+    },
+    "Description": "Shared utilities for Prior Auth Bot lambdas"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/SharedLayer/Resource",
+    "aws:asset:path": "asset.abe4e58d2bdf841c6a7c4051118b03bb45bbbf069340e195f9edfb5901256059",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Content"
+   }
+  },
+  "TranscribeHandlerServiceRole91A45336": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/TranscribeHandler/ServiceRole/Resource"
+   }
+  },
+  "TranscribeHandlerServiceRoleDefaultPolicy2AAC8651": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "transcribe:StartMedicalTranscriptionJob",
+        "transcribe:StartTranscriptionJob",
+        "transcribe:GetTranscriptionJob"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "states:StartExecution",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "PAWorkflow6322FEE6"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "TranscribeHandlerServiceRoleDefaultPolicy2AAC8651",
+    "Roles": [
+     {
+      "Ref": "TranscribeHandlerServiceRole91A45336"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/TranscribeHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "TranscribeHandler8E4C16AC": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "f5520f36a829f1bcf7153c00d3fef8fc6294b940334fb2870570faa5b996061a.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      },
+      "TRANSCRIPTS_PREFIX": "transcripts",
+      "STATE_MACHINE_ARN": {
+       "Ref": "PAWorkflow6322FEE6"
+      }
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "TranscribeHandlerServiceRole91A45336",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "TranscribeHandlerServiceRoleDefaultPolicy2AAC8651",
+    "TranscribeHandlerServiceRole91A45336"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/TranscribeHandler/Resource",
+    "aws:asset:path": "asset.f5520f36a829f1bcf7153c00d3fef8fc6294b940334fb2870570faa5b996061a",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ExtractEntitiesHandlerServiceRoleD3B91F3F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ExtractEntitiesHandler/ServiceRole/Resource"
+   }
+  },
+  "ExtractEntitiesHandlerServiceRoleDefaultPolicyE309063F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "comprehendmedical:InferRxNorm",
+        "comprehendmedical:InferSNOMEDCT",
+        "comprehendmedical:DetectEntitiesV2"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ExtractEntitiesHandlerServiceRoleDefaultPolicyE309063F",
+    "Roles": [
+     {
+      "Ref": "ExtractEntitiesHandlerServiceRoleD3B91F3F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ExtractEntitiesHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "ExtractEntitiesHandlerB7836FA8": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "40e1b7fe5496d9f56ab1008b948a993bc59d1738357a998045c435ac35345255.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      }
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "ExtractEntitiesHandlerServiceRoleD3B91F3F",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "ExtractEntitiesHandlerServiceRoleDefaultPolicyE309063F",
+    "ExtractEntitiesHandlerServiceRoleD3B91F3F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ExtractEntitiesHandler/Resource",
+    "aws:asset:path": "asset.40e1b7fe5496d9f56ab1008b948a993bc59d1738357a998045c435ac35345255",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "PACheckHandlerServiceRoleC4866A0F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PACheckHandler/ServiceRole/Resource"
+   }
+  },
+  "PACheckHandlerServiceRoleDefaultPolicy8259E361": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "WebScrapeCache747DC311",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "WebScrapeCache747DC311",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PACheckHandlerServiceRoleDefaultPolicy8259E361",
+    "Roles": [
+     {
+      "Ref": "PACheckHandlerServiceRoleC4866A0F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PACheckHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "PACheckHandlerE884B740": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "dada18bf85f092bb3eb0b1f4d73e63195c9b7291c188469d95b685e1e8325363.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      },
+      "CACHE_TABLE": {
+       "Ref": "WebScrapeCache747DC311"
+      },
+      "BEDROCK_MODEL_ID": "anthropic.claude-sonnet-4-5-20250929-v1:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "PACheckHandlerServiceRoleC4866A0F",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "PACheckHandlerServiceRoleDefaultPolicy8259E361",
+    "PACheckHandlerServiceRoleC4866A0F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PACheckHandler/Resource",
+    "aws:asset:path": "asset.dada18bf85f092bb3eb0b1f4d73e63195c9b7291c188469d95b685e1e8325363",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "FormSelectionHandlerServiceRole2C235DBE": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/FormSelectionHandler/ServiceRole/Resource"
+   }
+  },
+  "FormSelectionHandlerServiceRoleDefaultPolicyED278A5F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "FormSelectionHandlerServiceRoleDefaultPolicyED278A5F",
+    "Roles": [
+     {
+      "Ref": "FormSelectionHandlerServiceRole2C235DBE"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/FormSelectionHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "FormSelectionHandler5EF8697E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "5864db85685c5be4515f30c4b71f513785a9dc56437b58cbc6e34d28c7bf4501.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "OPENSEARCH_ENDPOINT": {
+       "Fn::GetAtt": [
+        "VectorCollection",
+        "CollectionEndpoint"
+       ]
+      },
+      "FORMS_INDEX": "blank-forms",
+      "BEDROCK_MODEL_ID": "anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "BEDROCK_EMBED_MODEL_ID": "amazon.titan-embed-text-v2:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "FormSelectionHandlerServiceRole2C235DBE",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "FormSelectionHandlerServiceRoleDefaultPolicyED278A5F",
+    "FormSelectionHandlerServiceRole2C235DBE"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/FormSelectionHandler/Resource",
+    "aws:asset:path": "asset.5864db85685c5be4515f30c4b71f513785a9dc56437b58cbc6e34d28c7bf4501",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "MemorySearchHandlerServiceRole70586C4A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/MemorySearchHandler/ServiceRole/Resource"
+   }
+  },
+  "MemorySearchHandlerServiceRoleDefaultPolicy9E745513": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemoriesE52D0152",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemoriesE52D0152",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemoriesE52D0152",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemoriesE52D0152",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "MemorySearchHandlerServiceRoleDefaultPolicy9E745513",
+    "Roles": [
+     {
+      "Ref": "MemorySearchHandlerServiceRole70586C4A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/MemorySearchHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "MemorySearchHandler679E2C66": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "6edf0e3e63d97bb6b04304c2c7cbde1d83c97317d3cc84173e2660a3e6ef21d0.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "OPENSEARCH_ENDPOINT": {
+       "Fn::GetAtt": [
+        "VectorCollection",
+        "CollectionEndpoint"
+       ]
+      },
+      "MEMORIES_INDEX": "memories",
+      "MEMORIES_TABLE": {
+       "Ref": "MemoriesE52D0152"
+      },
+      "BEDROCK_EMBED_MODEL_ID": "amazon.titan-embed-text-v2:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "MemorySearchHandlerServiceRole70586C4A",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "MemorySearchHandlerServiceRoleDefaultPolicy9E745513",
+    "MemorySearchHandlerServiceRole70586C4A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/MemorySearchHandler/Resource",
+    "aws:asset:path": "asset.6edf0e3e63d97bb6b04304c2c7cbde1d83c97317d3cc84173e2660a3e6ef21d0",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DocumentPopulationHandlerServiceRoleEC73E8D0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentPopulationHandler/ServiceRole/Resource"
+   }
+  },
+  "DocumentPopulationHandlerServiceRoleDefaultPolicy35ED3FC1": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "DocumentPopulationHandlerServiceRoleDefaultPolicy35ED3FC1",
+    "Roles": [
+     {
+      "Ref": "DocumentPopulationHandlerServiceRoleEC73E8D0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentPopulationHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "DocumentPopulationHandler73D4BA1A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "0183c1ae90590b432d62ea6d27c95b237c86ef287c8aa162689dff709a8e6a03.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      },
+      "BEDROCK_MODEL_ID": "anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "TRACKING_TABLE": {
+       "Ref": "Tracking0CBED059"
+      }
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "DocumentPopulationHandlerServiceRoleEC73E8D0",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "DocumentPopulationHandlerServiceRoleDefaultPolicy35ED3FC1",
+    "DocumentPopulationHandlerServiceRoleEC73E8D0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentPopulationHandler/Resource",
+    "aws:asset:path": "asset.0183c1ae90590b432d62ea6d27c95b237c86ef287c8aa162689dff709a8e6a03",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DocumentCourierHandlerServiceRole6546DA93": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentCourierHandler/ServiceRole/Resource"
+   }
+  },
+  "DocumentCourierHandlerServiceRoleDefaultPolicyDAB51644": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "PABotNotificationsTopic25E08A70"
+       }
+      },
+      {
+       "Action": [
+        "ses:SendRawEmail",
+        "ses:SendEmail"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "DocumentCourierHandlerServiceRoleDefaultPolicyDAB51644",
+    "Roles": [
+     {
+      "Ref": "DocumentCourierHandlerServiceRole6546DA93"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentCourierHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "DocumentCourierHandlerBA0827A9": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "bf0f0819fdb69ca3c75a9928265f0ff26126e5dc99e9abdd87bed1841b868842.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      },
+      "SES_FROM_EMAIL": "michael.lavery.2017@gmail.com",
+      "SES_TO_EMAIL": "michael.lavery.2017@gmail.com",
+      "TRACKING_TABLE": {
+       "Ref": "Tracking0CBED059"
+      },
+      "SNS_TOPIC_ARN": {
+       "Ref": "PABotNotificationsTopic25E08A70"
+      }
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "DocumentCourierHandlerServiceRole6546DA93",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60
+   },
+   "DependsOn": [
+    "DocumentCourierHandlerServiceRoleDefaultPolicyDAB51644",
+    "DocumentCourierHandlerServiceRole6546DA93"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/DocumentCourierHandler/Resource",
+    "aws:asset:path": "asset.bf0f0819fdb69ca3c75a9928265f0ff26126e5dc99e9abdd87bed1841b868842",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ResponseHandlerServiceRoleF2F291C4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ResponseHandler/ServiceRole/Resource"
+   }
+  },
+  "ResponseHandlerServiceRoleDefaultPolicy695A6AB2": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemoriesE52D0152",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemoriesE52D0152",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemoriesE52D0152",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemoriesE52D0152",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ResponseHandlerServiceRoleDefaultPolicy695A6AB2",
+    "Roles": [
+     {
+      "Ref": "ResponseHandlerServiceRoleF2F291C4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ResponseHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "ResponseHandler313744CC": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "88cabd3473a3e1f826381ab32c5ce45fabc511db3b4ae0994b9a3114d28ce3d6.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "TRACKING_TABLE": {
+       "Ref": "Tracking0CBED059"
+      },
+      "MEMORIES_TABLE": {
+       "Ref": "MemoriesE52D0152"
+      },
+      "OPENSEARCH_ENDPOINT": {
+       "Fn::GetAtt": [
+        "VectorCollection",
+        "CollectionEndpoint"
+       ]
+      },
+      "BEDROCK_MODEL_ID": "anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "BEDROCK_EMBED_MODEL_ID": "amazon.titan-embed-text-v2:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "ResponseHandlerServiceRoleF2F291C4",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "ResponseHandlerServiceRoleDefaultPolicy695A6AB2",
+    "ResponseHandlerServiceRoleF2F291C4"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/ResponseHandler/Resource",
+    "aws:asset:path": "asset.88cabd3473a3e1f826381ab32c5ce45fabc511db3b4ae0994b9a3114d28ce3d6",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "SelfImprovementHandlerServiceRoleE1D97749": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/SelfImprovementHandler/ServiceRole/Resource"
+   }
+  },
+  "SelfImprovementHandlerServiceRoleDefaultPolicyE13936E3": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DataBucketE3889A50",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DataBucketE3889A50",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "dynamodb:*",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "Tracking0CBED059",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "dynamodb:*",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemoriesE52D0152",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemoriesE52D0152",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "aoss:APIAccessAll",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SelfImprovementHandlerServiceRoleDefaultPolicyE13936E3",
+    "Roles": [
+     {
+      "Ref": "SelfImprovementHandlerServiceRoleE1D97749"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/SelfImprovementHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "SelfImprovementHandler16ED9A45": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "6c9e7e37607d7a187ceb473daa7140fae27865a04c63a7065fda9a00685ec3aa.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DATA_BUCKET": {
+       "Ref": "DataBucketE3889A50"
+      },
+      "TRACKING_TABLE": {
+       "Ref": "Tracking0CBED059"
+      },
+      "MEMORIES_TABLE": {
+       "Ref": "MemoriesE52D0152"
+      },
+      "OPENSEARCH_ENDPOINT": {
+       "Fn::GetAtt": [
+        "VectorCollection",
+        "CollectionEndpoint"
+       ]
+      },
+      "BEDROCK_MODEL_ID": "anthropic.claude-sonnet-4-5-20250929-v1:0",
+      "BEDROCK_EMBED_MODEL_ID": "amazon.titan-embed-text-v2:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "SelfImprovementHandlerServiceRoleE1D97749",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "SelfImprovementHandlerServiceRoleDefaultPolicyE13936E3",
+    "SelfImprovementHandlerServiceRoleE1D97749"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/SelfImprovementHandler/Resource",
+    "aws:asset:path": "asset.6c9e7e37607d7a187ceb473daa7140fae27865a04c63a7065fda9a00685ec3aa",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "EmbeddingHandlerServiceRoleFAEECA44": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/EmbeddingHandler/ServiceRole/Resource"
+   }
+  },
+  "EmbeddingHandlerServiceRoleDefaultPolicy3771A98E": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "bedrock:InvokeModel",
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "EmbeddingHandlerServiceRoleDefaultPolicy3771A98E",
+    "Roles": [
+     {
+      "Ref": "EmbeddingHandlerServiceRoleFAEECA44"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/EmbeddingHandler/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "EmbeddingHandler96BD91F4": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "8e8e4c174cf0ccb4578276071dba1163cbdd5df43b36eedd6fadc54e5d6e6482.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "BEDROCK_EMBED_MODEL_ID": "amazon.titan-embed-text-v2:0"
+     }
+    },
+    "Handler": "handler.handler",
+    "Layers": [
+     {
+      "Ref": "SharedLayer27DFABF0"
+     }
+    ],
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "EmbeddingHandlerServiceRoleFAEECA44",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "EmbeddingHandlerServiceRoleDefaultPolicy3771A98E",
+    "EmbeddingHandlerServiceRoleFAEECA44"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/EmbeddingHandler/Resource",
+    "aws:asset:path": "asset.8e8e4c174cf0ccb4578276071dba1163cbdd5df43b36eedd6fadc54e5d6e6482",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:PutBucketNotification",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "DataBucketE3889A50",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "Roles": [
+     {
+      "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Description": "AWS CloudFormation handler for \"Custom::S3BucketNotifications\" resources (@aws-cdk/aws-s3)",
+    "Code": {
+     "ZipFile": "import boto3  # type: ignore\nimport json\nimport logging\nimport urllib.request\n\ns3 = boto3.client(\"s3\")\n\nEVENTBRIDGE_CONFIGURATION = 'EventBridgeConfiguration'\nCONFIGURATION_TYPES = [\"TopicConfigurations\", \"QueueConfigurations\", \"LambdaFunctionConfigurations\"]\n\ndef handler(event: dict, context):\n  response_status = \"SUCCESS\"\n  error_message = \"\"\n  try:\n    props = event[\"ResourceProperties\"]\n    notification_configuration = props[\"NotificationConfiguration\"]\n    managed = props.get('Managed', 'true').lower() == 'true'\n    skipDestinationValidation = props.get('SkipDestinationValidation', 'false').lower() == 'true'\n    stack_id = event['StackId']\n    old = event.get(\"OldResourceProperties\", {}).get(\"NotificationConfiguration\", {})\n    if managed:\n      config = handle_managed(event[\"RequestType\"], notification_configuration)\n    else:\n      config = handle_unmanaged(props[\"BucketName\"], stack_id, event[\"RequestType\"], notification_configuration, old)\n    s3.put_bucket_notification_configuration(Bucket=props[\"BucketName\"], NotificationConfiguration=config, SkipDestinationValidation=skipDestinationValidation)\n  except Exception as e:\n    logging.exception(\"Failed to put bucket notification configuration\")\n    response_status = \"FAILED\"\n    error_message = f\"Error: {str(e)}. \"\n  finally:\n    submit_response(event, context, response_status, error_message)\n\ndef handle_managed(request_type, notification_configuration):\n  if request_type == 'Delete':\n    return {}\n  return notification_configuration\n\ndef handle_unmanaged(bucket, stack_id, request_type, notification_configuration, old):\n  def get_id(n):\n    n['Id'] = ''\n    sorted_notifications = sort_filter_rules(n)\n    strToHash=json.dumps(sorted_notifications, sort_keys=True).replace('\"Name\": \"prefix\"', '\"Name\": \"Prefix\"').replace('\"Name\": \"suffix\"', '\"Name\": \"Suffix\"')\n    return f\"{stack_id}-{hash(strToHash)}\"\n  def with_id(n):\n    n['Id'] = get_id(n)\n    return n\n\n  external_notifications = {}\n  existing_notifications = s3.get_bucket_notification_configuration(Bucket=bucket)\n  for t in CONFIGURATION_TYPES:\n    if request_type == 'Update':\n        old_incoming_ids = [get_id(n) for n in old.get(t, [])]\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not get_id(n) in old_incoming_ids]      \n    elif request_type == 'Delete':\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not n['Id'].startswith(f\"{stack_id}-\")]\n    elif request_type == 'Create':\n        external_notifications[t] = [n for n in existing_notifications.get(t, [])]\n  if EVENTBRIDGE_CONFIGURATION in existing_notifications:\n    external_notifications[EVENTBRIDGE_CONFIGURATION] = existing_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  if request_type == 'Delete':\n    return external_notifications\n\n  notifications = {}\n  for t in CONFIGURATION_TYPES:\n    external = external_notifications.get(t, [])\n    incoming = [with_id(n) for n in notification_configuration.get(t, [])]\n    notifications[t] = external + incoming\n\n  if EVENTBRIDGE_CONFIGURATION in notification_configuration:\n    notifications[EVENTBRIDGE_CONFIGURATION] = notification_configuration[EVENTBRIDGE_CONFIGURATION]\n  elif EVENTBRIDGE_CONFIGURATION in external_notifications:\n    notifications[EVENTBRIDGE_CONFIGURATION] = external_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  return notifications\n\ndef submit_response(event: dict, context, response_status: str, error_message: str):\n  response_body = json.dumps(\n    {\n      \"Status\": response_status,\n      \"Reason\": f\"{error_message}See the details in CloudWatch Log Stream: {context.log_stream_name}\",\n      \"PhysicalResourceId\": event.get(\"PhysicalResourceId\") or event[\"LogicalResourceId\"],\n      \"StackId\": event[\"StackId\"],\n      \"RequestId\": event[\"RequestId\"],\n      \"LogicalResourceId\": event[\"LogicalResourceId\"],\n      \"NoEcho\": False,\n    }\n  ).encode(\"utf-8\")\n  headers = {\"content-type\": \"\", \"content-length\": str(len(response_body))}\n  try:\n    req = urllib.request.Request(url=event[\"ResponseURL\"], headers=headers, data=response_body, method=\"PUT\")\n    with urllib.request.urlopen(req) as response:\n      print(response.read().decode(\"utf-8\"))\n    print(\"Status code: \" + response.reason)\n  except Exception as e:\n      print(\"send(..) failed executing request.urlopen(..): \" + str(e))\n\ndef sort_filter_rules(json_obj):\n  if not isinstance(json_obj, dict):\n      return json_obj\n  for key, value in json_obj.items():\n      if isinstance(value, dict):\n          json_obj[key] = sort_filter_rules(value)\n      elif isinstance(value, list):\n          json_obj[key] = [sort_filter_rules(item) for item in value]\n  if \"Filter\" in json_obj and \"Key\" in json_obj[\"Filter\"] and \"FilterRules\" in json_obj[\"Filter\"][\"Key\"]:\n      filter_rules = json_obj[\"Filter\"][\"Key\"][\"FilterRules\"]\n      sorted_filter_rules = sorted(filter_rules, key=lambda x: x[\"Name\"])\n      json_obj[\"Filter\"][\"Key\"][\"FilterRules\"] = sorted_filter_rules\n  return json_obj"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.13",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource"
+   }
+  },
+  "PipelineLogGroup1CF6DEF2": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 30
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PipelineLogGroup/Resource"
+   }
+  },
+  "PAWorkflowRole5E75106F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "states.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PAWorkflow/Role/Resource"
+   }
+  },
+  "PAWorkflowRoleDefaultPolicy53373CB6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ExtractEntitiesHandlerB7836FA8",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ExtractEntitiesHandlerB7836FA8",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "PACheckHandlerE884B740",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "PACheckHandlerE884B740",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "FormSelectionHandler5EF8697E",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "FormSelectionHandler5EF8697E",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "MemorySearchHandler679E2C66",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "MemorySearchHandler679E2C66",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DocumentPopulationHandler73D4BA1A",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DocumentPopulationHandler73D4BA1A",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SelfImprovementHandler16ED9A45",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "SelfImprovementHandler16ED9A45",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "DocumentCourierHandlerBA0827A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "DocumentCourierHandlerBA0827A9",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "ResponseHandler313744CC",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "ResponseHandler313744CC",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "logs:CreateLogDelivery",
+        "logs:GetLogDelivery",
+        "logs:UpdateLogDelivery",
+        "logs:DeleteLogDelivery",
+        "logs:ListLogDeliveries",
+        "logs:PutResourcePolicy",
+        "logs:DescribeResourcePolicies",
+        "logs:DescribeLogGroups"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "PAWorkflowRoleDefaultPolicy53373CB6",
+    "Roles": [
+     {
+      "Ref": "PAWorkflowRole5E75106F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PAWorkflow/Role/DefaultPolicy/Resource"
+   }
+  },
+  "PAWorkflow6322FEE6": {
+   "Type": "AWS::StepFunctions::StateMachine",
+   "Properties": {
+    "DefinitionString": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"StartAt\":\"ExtractEntities\",\"States\":{\"ExtractEntities\":{\"Next\":\"DeterminePA\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "ExtractEntitiesHandlerB7836FA8",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"DeterminePA\":{\"Next\":\"MapOverTreatments\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "PACheckHandlerE884B740",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"MapOverTreatments\":{\"Type\":\"Map\",\"Next\":\"AllComplete\",\"ItemsPath\":\"$.pa_required_treatments\",\"ItemProcessor\":{\"ProcessorConfig\":{\"Mode\":\"INLINE\"},\"StartAt\":\"SelectForm\",\"States\":{\"SelectForm\":{\"Next\":\"SearchMemories\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "FormSelectionHandler5EF8697E",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"SearchMemories\":{\"Next\":\"PopulateDocument\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "MemorySearchHandler679E2C66",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"PopulateDocument\":{\"Next\":\"SendDocument\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "DocumentPopulationHandler73D4BA1A",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"CheckRetry\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.should_retry\",\"BooleanEquals\":true,\"Next\":\"PopulateDocument\"}],\"Default\":\"ExhaustedRetries\"},\"SelfImprove\":{\"Next\":\"CheckRetry\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "SelfImprovementHandler16ED9A45",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"ExhaustedRetries\":{\"Type\":\"Fail\",\"Error\":\"RETRIES_EXHAUSTED\",\"Cause\":\"Maximum retry attempts exhausted\"},\"SendDocument\":{\"Next\":\"ProcessResponse\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "DocumentCourierHandlerBA0827A9",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"ProcessResponse\":{\"Next\":\"CheckOutcome\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "ResponseHandler313744CC",
+         "Arn"
+        ]
+       },
+       "\",\"Payload.$\":\"$\"}},\"CheckOutcome\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.outcome\",\"StringEquals\":\"APPROVED\",\"Next\":\"SaveLearnings\"}],\"Default\":\"SelfImprove\"},\"SaveLearnings\":{\"Next\":\"TreatmentDone\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::GetAtt": [
+         "ResponseHandler313744CC",
+         "Arn"
+        ]
+       },
+       "\",\"Payload\":{\"save_mode\":true,\"input.$\":\"$\"}}},\"TreatmentDone\":{\"Type\":\"Succeed\"}}},\"MaxConcurrency\":1},\"AllComplete\":{\"Type\":\"Succeed\"}},\"TimeoutSeconds\":86400}"
+      ]
+     ]
+    },
+    "LoggingConfiguration": {
+     "Destinations": [
+      {
+       "CloudWatchLogsLogGroup": {
+        "LogGroupArn": {
+         "Fn::GetAtt": [
+          "PipelineLogGroup1CF6DEF2",
+          "Arn"
+         ]
+        }
+       }
+      }
+     ],
+     "Level": "ALL"
+    },
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "PAWorkflowRole5E75106F",
+      "Arn"
+     ]
+    },
+    "TracingConfiguration": {
+     "Enabled": true
+    }
+   },
+   "DependsOn": [
+    "PAWorkflowRoleDefaultPolicy53373CB6",
+    "PAWorkflowRole5E75106F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PAWorkflow/Resource"
+   }
+  },
+  "PABotDashboardED815AAE": {
+   "Type": "AWS::CloudWatch::Dashboard",
+   "Properties": {
+    "DashboardBody": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"widgets\":[{\"type\":\"metric\",\"width\":24,\"height\":6,\"x\":0,\"y\":0,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Step Functions Executions\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/States\",\"ExecutionsStarted\",\"StateMachineArn\",\"",
+       {
+        "Ref": "PAWorkflow6322FEE6"
+       },
+       "\",{\"stat\":\"Sum\"}],[\"AWS/States\",\"ExecutionsSucceeded\",\"StateMachineArn\",\"",
+       {
+        "Ref": "PAWorkflow6322FEE6"
+       },
+       "\",{\"stat\":\"Sum\"}],[\"AWS/States\",\"ExecutionsFailed\",\"StateMachineArn\",\"",
+       {
+        "Ref": "PAWorkflow6322FEE6"
+       },
+       "\",{\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":24,\"height\":6,\"x\":0,\"y\":6,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Invocations\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "TranscribeHandler8E4C16AC"
+       },
+       "\",{\"label\":\"transcribe invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "ExtractEntitiesHandlerB7836FA8"
+       },
+       "\",{\"label\":\"extract_entities invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "PACheckHandlerE884B740"
+       },
+       "\",{\"label\":\"pa_check invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "FormSelectionHandler5EF8697E"
+       },
+       "\",{\"label\":\"form_selection invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "MemorySearchHandler679E2C66"
+       },
+       "\",{\"label\":\"memory_search invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "DocumentPopulationHandler73D4BA1A"
+       },
+       "\",{\"label\":\"document_population invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "DocumentCourierHandlerBA0827A9"
+       },
+       "\",{\"label\":\"document_courier invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "ResponseHandler313744CC"
+       },
+       "\",{\"label\":\"response invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "SelfImprovementHandler16ED9A45"
+       },
+       "\",{\"label\":\"self_improvement invocations\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"",
+       {
+        "Ref": "EmbeddingHandler96BD91F4"
+       },
+       "\",{\"label\":\"embedding invocations\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":24,\"height\":6,\"x\":0,\"y\":12,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Errors\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "TranscribeHandler8E4C16AC"
+       },
+       "\",{\"label\":\"transcribe errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "ExtractEntitiesHandlerB7836FA8"
+       },
+       "\",{\"label\":\"extract_entities errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "PACheckHandlerE884B740"
+       },
+       "\",{\"label\":\"pa_check errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "FormSelectionHandler5EF8697E"
+       },
+       "\",{\"label\":\"form_selection errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "MemorySearchHandler679E2C66"
+       },
+       "\",{\"label\":\"memory_search errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "DocumentPopulationHandler73D4BA1A"
+       },
+       "\",{\"label\":\"document_population errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "DocumentCourierHandlerBA0827A9"
+       },
+       "\",{\"label\":\"document_courier errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "ResponseHandler313744CC"
+       },
+       "\",{\"label\":\"response errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "SelfImprovementHandler16ED9A45"
+       },
+       "\",{\"label\":\"self_improvement errors\",\"stat\":\"Sum\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"",
+       {
+        "Ref": "EmbeddingHandler96BD91F4"
+       },
+       "\",{\"label\":\"embedding errors\",\"stat\":\"Sum\"}]],\"yAxis\":{}}},{\"type\":\"metric\",\"width\":24,\"height\":6,\"x\":0,\"y\":18,\"properties\":{\"view\":\"timeSeries\",\"title\":\"Lambda Duration (Key Functions)\",\"region\":\"",
+       {
+        "Ref": "AWS::Region"
+       },
+       "\",\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "DocumentPopulationHandler73D4BA1A"
+       },
+       "\",{\"label\":\"document_population duration\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"",
+       {
+        "Ref": "SelfImprovementHandler16ED9A45"
+       },
+       "\",{\"label\":\"self_improvement duration\"}]],\"yAxis\":{}}}]}"
+      ]
+     ]
+    },
+    "DashboardName": "PABotDashboard"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/PABotDashboard/Resource"
+   }
+  },
+  "SfnExecutionFailuresAlarmC3D11981": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Step Functions execution failures detected",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "StateMachineArn",
+      "Value": {
+       "Ref": "PAWorkflow6322FEE6"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ExecutionsFailed",
+    "Namespace": "AWS/States",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/SfnExecutionFailuresAlarm/Resource"
+   }
+  },
+  "LambdaErrorstranscribe237AC0A6": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for transcribe",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "TranscribeHandler8E4C16AC"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-transcribe/Resource"
+   }
+  },
+  "LambdaErrorsextractentities86DBDA64": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for extract_entities",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "ExtractEntitiesHandlerB7836FA8"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-extract_entities/Resource"
+   }
+  },
+  "LambdaErrorspacheck8CB1B977": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for pa_check",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "PACheckHandlerE884B740"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-pa_check/Resource"
+   }
+  },
+  "LambdaErrorsformselection22A0C831": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for form_selection",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "FormSelectionHandler5EF8697E"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-form_selection/Resource"
+   }
+  },
+  "LambdaErrorsmemorysearchB64A24A6": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for memory_search",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "MemorySearchHandler679E2C66"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-memory_search/Resource"
+   }
+  },
+  "LambdaErrorsdocumentpopulationEFB18D3C": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for document_population",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "DocumentPopulationHandler73D4BA1A"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-document_population/Resource"
+   }
+  },
+  "LambdaErrorsdocumentcourier173166DA": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for document_courier",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "DocumentCourierHandlerBA0827A9"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-document_courier/Resource"
+   }
+  },
+  "LambdaErrorsresponseAB3F6237": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for response",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "ResponseHandler313744CC"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-response/Resource"
+   }
+  },
+  "LambdaErrorsselfimprovement5D6F3D2E": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for self_improvement",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "SelfImprovementHandler16ED9A45"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-self_improvement/Resource"
+   }
+  },
+  "LambdaErrorsembeddingF843F51D": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Lambda errors detected for embedding",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "FunctionName",
+      "Value": {
+       "Ref": "EmbeddingHandler96BD91F4"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "Errors",
+    "Namespace": "AWS/Lambda",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 0
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/LambdaErrors-embedding/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/5VSTW/bMAz9Lc1Z0bqmu+yWputQIEWDpNhlGAJZZmPVkmiIUjrD8H8fLefzuJMe9R7JR0p38u7brby9UZ801WU9taaQ3SYqXQu+2nY0k91D0jVEsXj3I/rdTZz5a/zk++QybdCzPFMkR+k8RXwECxFeiw/QkSb9HzFSK7RGt+eqY/wftccE9hrBgb8s/aAIemGVK0olO+6wguAMkUEvlqqF8AtCDpi6ip+S1/FAHHEvytYrhyUv5k0VFgYyg15gA55ABV0RhD0EC0S54QZ0Cia25yEXaC2cis+1ZunI9oKAJF/+cMrY55Jn4UxBPGj3ho3RuWEGm1SQDqY5lrmMucxsq4ggkpwPhzDKyW6No+N8nu2cWkdo3g+T0jYqqkku8+Ke/R5ruBbI7oktsg22D6VYVGg0iBfViPwML0pXxud2lzE/Be44d4m7nwFTk9d+wL3QFlP5qaKuZPeoqCpQhXKQnIO5VcHltQ2g78UiUUS3BsIU9DjeCV9Rq4B7U0IYfoTIW2FjO+N34qjoxaqNFfovM/n1Xs5uPsiYaUj8Bg7kejz/ASTEZAUlAwAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PABotStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,8 @@
+resources:
+  cloud: aws
+  region: us-west-2
+  accelerators: null
+  cpus: 32+
+  memory: 128+
+  disk_size: 500
+  disk_tier: medium
