@@ -19,4 +19,4 @@ The purpose of this specification is to design a dashboard for physicians to int
 4. When clicking on the prior authorization, it leads to the Prior Authorization Visualizer
 
 ## Prior Authorization Visualizer (physician version)
-1. This visualizer is the same as specified in [pipeline dashboard](Pipelinedashboard.md); however, it should return to the physicians' dashboard, of course.
+1. This visualizer is the same as specified in [Pipeline Dashboard](pipeline_dashboard.md); however, it should return to the physicians' dashboard, of course.

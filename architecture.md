@@ -1,73 +1,43 @@
-# Motivation
+# Prior Authorization Bot — System Architecture
+
+## Motivation
 
 Applying for prior authorization is a friction point for physicians and patients alike. We would like to automate this process to enable swift care of patients and reduce the load and burnout of physicians.
 
-# Context
+## Context
 
-We are trying to win a hackathon under the track of best use of AWS. This doesn’t mean use as many services as possible but a genuinely creative and effective use of their products to solve a problem. Assume we have unlimited use of AWS so if you think any service is useful then implement it.  
+We are trying to win a hackathon under the track of best use of AWS. This doesn't mean use as many services as possible but a genuinely creative and effective use of their products to solve a problem. Assume we have unlimited use of AWS so if you think any service is useful then implement it.  
 Example PA form: [https://medi-calrx.dhcs.ca.gov/cms/medicalrx/static-assets/documents/provider/forms-and-information/Medi-Cal\_Rx\_PA\_Request\_Form.pdf\#page=1.00\&gsr=0](https://medi-calrx.dhcs.ca.gov/cms/medicalrx/static-assets/documents/provider/forms-and-information/Medi-Cal_Rx_PA_Request_Form.pdf#page=1.00&gsr=0)
 
-# Requirements
+## System Overview
 
-1. Self-improving system  
-2. Email service
-3. Document population
-4. Physician Dashboard
-5. Pipeline Dashboard
+A physician uploads an audio recording of a patient appointment. The system transcribes the recording, extracts medical entities (prescriptions, surgeries, therapies), and determines which treatments require prior authorization by checking against the patient's insurance provider. For each treatment requiring PA, the system selects the appropriate blank form, retrieves relevant memories from past applications, and uses an LLM to populate the form with patient data and learned context.
 
-### Email Service
+Completed forms are sent to the insurer through the appropriate channel (email or fax). When an application is approved, the system saves what worked to its memory for future reference. When rejected, a self-improvement pipeline analyzes the rejection, refines the application, and resubmits — learning from each attempt.
 
-Use Amazon SES service to send prior authorization email requests to [michael.lavery.2017@gmail.com](mailto:michael.lavery.2017@gmail.com) after one iteration of the pipeline is complete.  
-Take responses from Amazon SES and use rejection reasons to improve for appeal.  
-On failure brainstorm a priority list of improvements to isolate solutions
+Two dashboards provide visibility: a physician-facing dashboard for submitting recordings and tracking requests, and a pipeline dashboard for monitoring system health and PA status across all stages.
 
-# Agent Pipeline
+## Agent Pipeline
 
-1. Extract anything from appointment transcript and patient data that may require prior authorization, this may be prescriptions, surgeries, and therapies. You can use things like AWS comprehend medical, InferRxNorm, InferSNOMEDCT, and DetectEntitiesV2. You should cast a wide net on what is extracted because it will be determined later what actually requires prior authorization.  
-2. Use LLM with the context of treatments, patient data, and healthcare providers to find the treatments that require prior authorization. Use a web agent to scrape the provider’s website to do this. Cache the data that is retrieved from the web agent so it doesn’t scrape every search.  
-3. Using prescriptions that require prior authorization and user data, use LLM to search our list of blank forms. Pick the document that will be used to send the prior authorization.  
-4. Run memories search to find the relevant advice and previous successful prior authorizations to maximize the success rate of this prior authorization application.  
-5. Call a subagent who fills out the blank form we chose at step 3 using the document population service and the results of the memory search.  
-6. Send the filled document using the document courier service.  
-7. Once sent, there will be two outcomes: authorization or rejection  
-   1. If authorization, clean up. Save relevant learning experiences, what was effective, what was unnecessary.  
-   2. If rejection, we leverage the self improvement pipeline to attempt a stronger appeal.
+The core orchestration is a 7-step agent pipeline that moves from entity extraction through form submission and outcome handling. It coordinates all services below to process a single prior authorization request end-to-end.
 
-# Services
+Full specification: [Agent Pipeline](agent_pipeline.md)
 
-## Speech to Text
+## Services
 
-1. The process begins with a recording of a doctor’s appointment that is input into the pipeline.  
-2. A speech to text module is used to extract a transcript of the appointment (AWS speech to text)
+| Service | Description | Spec |
+|---------|-------------|------|
+| Speech to Text | Transcribes appointment recordings into text | [speech_to_text.md](speech_to_text.md) |
+| Search | Finds relevant forms and memories for PA applications | [search_service.md](search_service.md) |
+| Memories | Stores and retrieves learnings to improve future applications | [memory_feature.md](memory_feature.md) |
+| Document Download | Finds and downloads blank PA forms from providers | [document_download.md](document_download.md) |
+| Document Population | Fills blank forms with patient data using LLM | [document_population.md](document_population.md) |
+| Document Courier | Sends completed forms to insurers via email or fax | [document_courier.md](document_courier.md) |
+| Self Improvement | Handles rejections and iterates on appeals | [self_improvement.md](self_improvement.md) |
 
-## Search
+## Dashboards
 
-You will have to implement a search system for 2 purposes:
-
-1. Search for and choose the relevant forms to populate for prior authorization application.  
-2. Search for and choose from relevant memories that would most likely help in the process of filling out the prior authorization form.
-
-## Memories
-
-Memories should have structure to enable searching. At the highest level there should be advice that is relevant for populating any document for any prescription.  
-There should be 3 ways to search for more specific memories:
-
-1. Memories connected to document  
-2. Memories of provider  
-3. Memories of prescription
-
-## Document Population Service
-
-1. Call a lambda function that fills out the blank forms that our LLM can use. It essentially needs to tell the LLM what fields need to be filled and their descriptions, and can take the input from the LLM to fill the fields. When it is done, the filled PDF has to be saved with a traceable labeling scheme. This is because if the form leads to a successful prior authorization, it will be used later as a reference.
-
-## Document Courier Service
-
-Courier Service class is used to send and receive prior auth applications and responses. Route to the proper courier services based on the healthcare providers requirements.  
-Fax Service sub class can be configured and used to send fax based authorizations.  
-Email Service sub class can be configured and used to send email based authorizations.
-
-## Self improvement pipeline
-
-When a prior authorization is rejected, it often comes back with a description of the reasons for rejections. Using the descriptions, search through the patients’ data to make necessary fixes and resend the prior authorization using the components of the pipeline already described and integrate feedback into additional context that is provided at all stages of the pipeline. On success this feedback should be saved into the memory subsystem.
-
-In the case of a rejection without reasoning provided, we will handle this by proposing potential reasoning in an experimental format. We will iterate through this ranked list of most likely helpful to least likely helpful changes, and use informed guesses to maximize our chances in the appeals process. Given a success using one of these results, we will also save the successful brainstormed change in the memory subsystem.
+| Dashboard | Description | Spec |
+|-----------|-------------|------|
+| Pipeline Dashboard | Monitor pipeline health, AWS diagnostics, and PA status | [pipeline_dashboard.md](pipeline_dashboard.md) |
+| Physician Dashboard | Submit recordings, search and track PA requests | [physician_dashboard.md](physician_dashboard.md) |
