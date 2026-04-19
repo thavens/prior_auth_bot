@@ -30,6 +30,8 @@ Full specification: [Agent Pipeline](agent_pipeline.md)
 | Speech to Text | Transcribes appointment recordings into text | [speech_to_text.md](speech_to_text.md) |
 | Search | Finds relevant forms and memories for PA applications | [search_service.md](search_service.md) |
 | Memories | Stores and retrieves learnings to improve future applications | [memory_feature.md](memory_feature.md) |
+| Patient Data | Source-of-truth patient records; powers dashboard selection and pipeline hydration | [patient_data.md](patient_data.md) |
+| Physician Data | Source-of-truth physician records; powers dashboard selection and pipeline hydration | [physician_data.md](physician_data.md) |
 | Document Download | Finds and downloads blank PA forms from providers | [document_download.md](document_download.md) |
 | Document Population | Fills blank forms with patient data using LLM | [document_population.md](document_population.md) |
 | Document Courier | Sends completed forms to insurers via email or fax | [document_courier.md](document_courier.md) |
@@ -75,6 +77,8 @@ Principle: **the spec that writes to a resource owns its creation. Consumers hol
 | **SQS: `pa-ses-responses`** | `document_courier` | `self_improvement` | SES incoming notifications land here |
 | **DynamoDB: `pa_requests`** | `agent_pipeline` | All dashboards, all services (read) | Central pipeline state table |
 | **DynamoDB: `pa_memories`** | `memory_feature` | `search_service` | 4 GSIs for access patterns |
+| **DynamoDB: `pa_patients`** | `patient_data` | `agent_pipeline` (Step 0 hydration), `physician_dashboard` (list/search/create), `pipeline_dashboard` (search) | Only writer is `physician_dashboard` (patient creation). GSIs: `by_physician`, `by_name` |
+| **DynamoDB: `pa_physicians`** | `physician_data` | `agent_pipeline` (Step 0 hydration), `physician_dashboard`, `pipeline_dashboard` | Read-only — seeded with synthetic data for the demo. GSIs: `by_name`, `by_npi` |
 | **DynamoDB: `pa_scrape_cache`** | `search_service` | — | TTL-based cache for web scraping results |
 | **CloudWatch Metrics/Alarms** | `pipeline_dashboard` | — | Aggregates health from all services |
 | **DynamoDB Streams** | `agent_pipeline` (on `pa_requests`) | `pipeline_dashboard` | Powers WebSocket real-time updates |

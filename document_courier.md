@@ -10,7 +10,7 @@ Sends completed prior authorization applications and receives responses from ins
 
 ## Email Service
 
-while normally a system like FAX is used to send over the prior authorization request, the email service will be used for the demo of the hackathon. prior authorization emails should be sent to "michael.lavery.2017@gmail.com". Use Amazon SES to send prior authorization email requests, the email should include the patient name, provider name, insurance name, and attach the required and completed prior authorization paperwork. There will be email replies and feed rejection reasons back into the [Self Improvement](self_improvement.md) pipeline for appeal. the responses will come simply in the form of either "accepted" or "rejected. Reasons: '...' ". 
+while normally a system like FAX is used to send over the prior authorization request, the email service will be used for the demo of the hackathon. prior authorization emails should be sent to "michael.lavery.2017@gmail.com". Use Amazon SES to send prior authorization email requests, the email should include the patient name, provider name, insurance name, and attach the required and completed prior authorization paperwork. Patient name and insurance fields are read from the `patient` snapshot on the pa_request record (originally hydrated from [`pa_patients`](patient_data.md) at Agent Pipeline Step 0). There will be email replies and feed rejection reasons back into the [Self Improvement](self_improvement.md) pipeline for appeal. the responses will come simply in the form of either "accepted" or "rejected. Reasons: '...' ". 
 
 ## AWS Ownership
 

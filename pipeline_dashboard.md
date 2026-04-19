@@ -23,7 +23,7 @@ This is the specification for the dashboard to be created for the prior authoriz
 3. For cool visuals, have a little gradient that sweeps over the pipeline visualization from left to right. When it hits the right end, it will restart from the left. The color of the gradient should match the color of the stage.
 
 ## Prior Authorization Request Search
-1. I should be able to search for any prior authorization that is in flight using the patient's name. When I click on it, it should send me to the Prior Authorization Visualizer.
+1. I should be able to search for any prior authorization that is in flight using the patient's name. Patient lookup queries [`pa_patients`](patient_data.md) via the `by_name` GSI for autocomplete; the resolved `patient_id` then filters `pa_requests`. When I click on it, it should send me to the Prior Authorization Visualizer.
 
 ## Prior Authorization Visualizer
 1. This is a visualizer for the entire prior authorization request, so it includes any relevant patient information and documents relevant to the prior authorization request, like the form that is actually being sent.
@@ -44,7 +44,8 @@ This spec owns:
 
 This spec reads from:
 - **DynamoDB Streams** (on `pa_requests`, owned by [Agent Pipeline](agent_pipeline.md)) — Powers real-time WebSocket updates for the pipeline visualizer.
-- **DynamoDB: `pa_requests`** (owned by [Agent Pipeline](agent_pipeline.md)) — For PA search and pipeline stage views.
+- **DynamoDB: `pa_requests`** (owned by [Agent Pipeline](agent_pipeline.md)) — For PA search and pipeline stage views. Patient/physician info displayed in the visualizer comes from the snapshots on these records.
+- **DynamoDB: `pa_patients`** (owned by [Patient Data](patient_data.md)) — Patient-name autocomplete for PA search (by_name GSI).
 - **S3: `pa-completed-forms`** (owned by [Document Population](document_population.md)) — For PDF viewing in the PA Visualizer.
 
 ## API Integration

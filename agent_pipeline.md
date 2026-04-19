@@ -4,19 +4,31 @@ The agent pipeline is the core orchestration layer that coordinates all services
 
 ## Pipeline Steps
 
+### Step 0: Request Hydration
+
+When `POST /pa-requests` arrives from the [Physician Dashboard](physician_dashboard.md) with `patient_id` and `physician_id`, the orchestrator creates the pa_request record and hydrates it from the source-of-truth tables:
+
+- Reads [Patient Data](patient_data.md) `pa_patients` by `patient_id` and copies the resulting fields into the pa_request's `patient` block.
+- Reads [Physician Data](physician_data.md) `pa_physicians` by `physician_id` and copies the resulting fields into the pa_request's `physician` block.
+
+These blocks are a **snapshot** taken at request creation. All downstream steps read the snapshot from the pa_request record; they do not re-fetch from `pa_patients` or `pa_physicians`. This protects in-flight requests from mid-pipeline edits to the source record.
+
+**Input:** `patient_id`, `physician_id`, audio_s3_key
+**Output:** pa_request record with populated `patient` and `physician` snapshots, `status = "queued"`
+
 ### Step 1: Entity Extraction
 
 Extract anything from the appointment transcript and patient data that may require prior authorization — prescriptions, surgeries, and therapies. Cast a wide net because downstream steps determine what actually requires prior authorization.
 
 **AWS Services:** Comprehend Medical, InferRxNorm, InferSNOMEDCT, DetectEntitiesV2
-**Input:** Transcript from [Speech to Text](speech_to_text.md), patient data
+**Input:** Transcript from [Speech to Text](speech_to_text.md), patient snapshot from pa_request
 **Output:** List of candidate treatments
 
 ### Step 2: PA Requirement Determination
 
-Use LLM with the context of treatments, patient data, and healthcare providers to find the treatments that require prior authorization. Use a web agent to scrape the provider's website. Cache the data retrieved from the web agent so it doesn't scrape every search.
+Use LLM with the context of treatments, the patient snapshot on the pa_request, and healthcare providers to find the treatments that require prior authorization. Use a web agent to scrape the provider's website. Cache the data retrieved from the web agent so it doesn't scrape every search.
 
-**Input:** Candidate treatments, patient data, provider info
+**Input:** Candidate treatments, patient snapshot from pa_request, provider info
 **Output:** Filtered list of treatments requiring PA
 
 ### Step 3: Form Selection
@@ -24,7 +36,7 @@ Use LLM with the context of treatments, patient data, and healthcare providers t
 Using prescriptions that require prior authorization and user data, use LLM to search our list of blank forms. Pick the document that will be used to send the prior authorization.
 
 **Depends on:** [Document Download](document_download.md), [Search Service](search_service.md)
-**Input:** Treatments requiring PA, patient data
+**Input:** Treatments requiring PA, patient snapshot from pa_request
 **Output:** Selected blank form(s)
 
 ### Step 4: Memory Retrieval
@@ -40,7 +52,7 @@ Search for relevant advice and previous successful prior authorizations to maxim
 Call a subagent who fills out the blank form using the document population service and the results of the memory search.
 
 **Depends on:** [Document Population](document_population.md)
-**Input:** Blank form, patient data, memory context
+**Input:** Blank form, patient and physician snapshots from pa_request, memory context
 **Output:** Completed PA form
 
 ### Step 6: Document Submission
@@ -76,13 +88,19 @@ This spec owns:
 - **DynamoDB Streams** on `pa_requests` — Powers real-time WebSocket updates to dashboards.
 - **AWS Comprehend Medical** — InferRxNorm, InferSNOMEDCT, DetectEntitiesV2 (used in Step 1).
 
+This spec reads from (Step 0 hydration only):
+- **DynamoDB: `pa_patients`** (owned by [Patient Data](patient_data.md)) — Copies patient fields into the pa_request snapshot.
+- **DynamoDB: `pa_physicians`** (owned by [Physician Data](physician_data.md)) — Copies physician fields into the pa_request snapshot.
+
 ## Pipeline State Tracking
 
 Each step updates the `pa_requests` DynamoDB record with its status before proceeding. The `status` field takes one of:
 
-`"queued"` | `"step_1_entity_extraction"` | `"step_2_pa_determination"` | `"step_3_form_selection"` | `"step_4_memory_retrieval"` | `"step_5_document_population"` | `"step_6_document_submission"` | `"step_7_outcome_handling"` | `"completed_approved"` | `"completed_rejected_exhausted"` | `"failed"` | `"appealing"`
+`"queued"` (post-hydration) | `"step_1_entity_extraction"` | `"step_2_pa_determination"` | `"step_3_form_selection"` | `"step_4_memory_retrieval"` | `"step_5_document_population"` | `"step_6_document_submission"` | `"step_7_outcome_handling"` | `"completed_approved"` | `"completed_rejected_exhausted"` | `"failed"` | `"appealing"`
 
 ## Central PA Request Record (DynamoDB `pa_requests`)
+
+The `patient` and `physician` blocks below are snapshots hydrated at Step 0 from [`pa_patients`](patient_data.md) and [`pa_physicians`](physician_data.md). They are immutable for the lifetime of the pa_request.
 
 ```json
 {

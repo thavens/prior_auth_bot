@@ -4,7 +4,7 @@ Handles prior authorization rejections by analyzing feedback, improving applicat
 
 ## Rejection with Reasons
 
-When a rejection includes a description of the reasons, search through the patient's data to make necessary fixes and resend the prior authorization using the existing pipeline components. Integrate the feedback into additional context that is provided at all stages of the pipeline. On success, save the feedback into the [Memory](memory_feature.md) subsystem.
+When a rejection includes a description of the reasons, search through the patient's data to make necessary fixes and resend the prior authorization using the existing pipeline components. "Patient's data" here refers to the `patient` snapshot on the in-flight `pa_request` (originally hydrated from [`pa_patients`](patient_data.md) at Step 0); the snapshot is authoritative for the lifetime of the attempt so that in-flight appeals are not perturbed by concurrent edits to the source record. Integrate the feedback into additional context that is provided at all stages of the pipeline. On success, save the feedback into the [Memory](memory_feature.md) subsystem.
 
 ## Rejection without Reasons
 

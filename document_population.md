@@ -7,7 +7,7 @@ https://code.claude.com/docs/en/agent-sdk/custom-tools
 # Requirements
 
 1. Retrieve the forms, along with the aws textract data to provide to LLM.
-2. Recieve the patient data that is used to fill in the form.
+2. Recieve the patient data (snapshot from the pa_request, originally hydrated from [`pa_patients`](patient_data.md) at Agent Pipeline Step 0) that is used to fill in the form.
 3. Generate with LLM according to a key value json schema that can be used to populate the fields.
 4. use pymupdf to fill out the AcroForm fields with the right values.
 
