@@ -43,7 +43,7 @@ flowchart TB
         S3_textract["S3: pa-textract-output"]
         S3_completed["S3: pa-completed-forms"]
         Transcribe["AWS Transcribe"]
-        Comprehend["Comprehend Medical\nInferRxNorm | InferSNOMEDCT\nDetectEntitiesV2"]
+        Bedrock_entity["Bedrock (Claude)\nForm-Aware Entity Extraction"]
         Textract["AWS Textract"]
         SES["Amazon SES"]
         DDB_requests["DynamoDB: pa_requests"]
@@ -67,7 +67,7 @@ flowchart TB
     %% AWS service connections
     STT -- "Audio" --> Transcribe
     STT -- "Read/Write" --> S3_audio
-    S1 -- "Entities" --> Comprehend
+    S1 -- "Entities" --> Bedrock_entity
     S2 -- "Check PA rules" --> SS
     SS -- "Cache lookups" --> DDB_cache
     S3 -- "Find forms" --> SS
@@ -114,7 +114,7 @@ flowchart TB
 | S3: `pa-textract-output` | document_download | document_population |
 | S3: `pa-completed-forms` | document_population | document_courier, dashboards |
 | AWS Transcribe | speech_to_text | — |
-| AWS Comprehend Medical | agent_pipeline (Step 1) | — |
+| AWS Bedrock (Claude) | agent_pipeline (Step 1) | — |
 | AWS Textract | document_download | — |
 | Amazon SES | document_courier | — |
 | SQS: `pa-ses-responses` | document_courier | self_improvement |

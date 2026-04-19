@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prior Auth Bot — AI-Powered Prior Authorization</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Title -->
+      <section>
+        <div class="title-slide">
+          <div class="title-logo">
+            <svg viewBox="0 0 48 48" width="64" height="64" fill="none">
+              <rect x="4" y="4" width="40" height="40" rx="8" stroke="#55cc58" stroke-width="2" fill="rgba(85,204,88,0.08)"/>
+              <path d="M16 24h16M24 16v16" stroke="#55cc58" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="14" stroke="rgba(85,204,88,0.3)" stroke-width="1" stroke-dasharray="4 3"/>
+            </svg>
+          </div>
+          <h1 class="title-gradient">Prior Auth Bot</h1>
+          <p class="title-subtitle">AI-Powered Prior Authorization</p>
+          <div class="title-tagline">From appointment recording to submitted PA form — fully automated</div>
+        </div>
+        <aside class="notes">
+          Welcome. We built a system that takes a doctor's appointment recording and automatically submits prior authorization forms to insurance providers, learning and improving with every submission.
+        </aside>
+      </section>
+
+      <!-- SLIDE 2: The Problem -->
+      <section>
+        <h2 class="slide-heading">The Problem</h2>
+        <p class="slide-subheading">Prior authorization is healthcare's most expensive bottleneck</p>
+        <div class="stat-cards">
+          <div class="stat-card fragment" data-fragment-index="1">
+            <div class="stat-number">34+</div>
+            <div class="stat-unit">hours / week</div>
+            <div class="stat-desc">spent by physician practices on prior authorization</div>
+            <div class="stat-source">AMA Physician Survey, 2023</div>
+          </div>
+          <div class="stat-card fragment" data-fragment-index="2">
+            <div class="stat-number stat-red">$31B</div>
+            <div class="stat-unit">annual cost</div>
+            <div class="stat-desc">administrative burden on the U.S. healthcare system</div>
+            <div class="stat-source">CAQH Index Report</div>
+          </div>
+          <div class="stat-card fragment" data-fragment-index="3">
+            <div class="stat-number stat-blue">93%</div>
+            <div class="stat-unit">of physicians</div>
+            <div class="stat-desc">report care delays due to prior authorization requirements</div>
+            <div class="stat-source">AMA Prior Auth Survey, 2022</div>
+          </div>
+        </div>
+        <div class="problem-quote fragment" data-fragment-index="4">
+          <span class="quote-mark">"</span>1 in 3 physicians report that PA has led to a serious adverse event for a patient.<span class="quote-mark">"</span>
+        </div>
+        <aside class="notes">
+          The prior authorization system is broken. Let me put this in perspective — one in three physicians reports that PA has led to a serious adverse event for a patient. 34% of prior authorizations lead to care abandonment. This is a life-and-death workflow being handled with fax machines and phone calls.
+        </aside>
+      </section>
+
+      <!-- SLIDE 3: Our Solution -->
+      <section>
+        <h2 class="slide-heading">Our Solution</h2>
+        <div class="hero-statement fragment" data-fragment-index="1">
+          What if a single audio recording<br>could handle <span class="text-green">everything</span>?
+        </div>
+        <div class="solution-flow fragment" data-fragment-index="2">
+          <div class="solution-step">
+            <div class="solution-icon">
+              <svg viewBox="0 0 40 40" width="48" height="48" fill="none">
+                <circle cx="20" cy="14" r="6" stroke="#fff" stroke-width="1.5"/>
+                <path d="M8 34c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="solution-label">Physician</div>
+            <div class="solution-desc">Records appointment</div>
+          </div>
+          <div class="solution-arrow">
+            <svg viewBox="0 0 60 20" width="60" height="20" fill="none">
+              <line x1="0" y1="10" x2="50" y2="10" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+              <polyline points="45,5 55,10 45,15" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="solution-step">
+            <div class="solution-icon icon-green">
+              <svg viewBox="0 0 40 40" width="48" height="48" fill="none">
+                <rect x="6" y="8" width="28" height="24" rx="3" stroke="#55cc58" stroke-width="1.5"/>
+                <path d="M12 16h16M12 21h12M12 26h8" stroke="#55cc58" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="32" cy="12" r="6" fill="#0e0e0e" stroke="#55cc58" stroke-width="1.5"/>
+                <path d="M30 12h4M32 10v4" stroke="#55cc58" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="solution-label">AI Pipeline</div>
+            <div class="solution-desc">Processes &amp; submits</div>
+          </div>
+          <div class="solution-arrow">
+            <svg viewBox="0 0 60 20" width="60" height="20" fill="none">
+              <line x1="0" y1="10" x2="50" y2="10" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+              <polyline points="45,5 55,10 45,15" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="solution-step">
+            <div class="solution-icon icon-green">
+              <svg viewBox="0 0 40 40" width="48" height="48" fill="none">
+                <circle cx="20" cy="20" r="14" stroke="#55cc58" stroke-width="1.5"/>
+                <polyline points="13,20 18,25 27,16" fill="none" stroke="#55cc58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="solution-label">PA Approved</div>
+            <div class="solution-desc">Patient gets care</div>
+          </div>
+        </div>
+        <div class="solution-features fragment" data-fragment-index="3">
+          <span class="feature-tag">Fully Automated</span>
+          <span class="feature-tag">Self-Improving</span>
+          <span class="feature-tag">Real-Time Tracking</span>
+          <span class="feature-tag">Appeals on Rejection</span>
+        </div>
+        <aside class="notes">
+          Our solution is simple from the physician's perspective. Record the appointment, upload it, and the system handles everything — transcription, entity extraction, form selection, form filling, submission, and if rejected, it learns and appeals automatically.
+        </aside>
+      </section>
+
+      <!-- SLIDE 4: Architecture -->
+      <section>
+        <h2 class="slide-heading">7-Step Agent Pipeline</h2>
+        <p class="slide-subheading">Orchestrated AI agents process each request end-to-end</p>
+        <div class="arch-pipeline">
+          <div class="arch-connector"><div class="arch-connector-fill"></div></div>
+          <div class="arch-step fragment" data-fragment-index="1">
+            <div class="arch-step-num">01</div>
+            <div class="arch-step-label">Transcription</div>
+            <div class="arch-step-service">AWS Transcribe</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="2">
+            <div class="arch-step-num">02</div>
+            <div class="arch-step-label">Entity Extraction</div>
+            <div class="arch-step-service">Bedrock Claude</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="3">
+            <div class="arch-step-num">03</div>
+            <div class="arch-step-label">PA Determination</div>
+            <div class="arch-step-service">LLM + Web Search</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="4">
+            <div class="arch-step-num">04</div>
+            <div class="arch-step-label">Form Selection</div>
+            <div class="arch-step-service">S3 + LLM</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="5">
+            <div class="arch-step-num">05</div>
+            <div class="arch-step-label">Memory Retrieval</div>
+            <div class="arch-step-service">Embeddings + RAG</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="6">
+            <div class="arch-step-num">06</div>
+            <div class="arch-step-label">Form Population</div>
+            <div class="arch-step-service">Bedrock + PyMuPDF</div>
+          </div>
+          <div class="arch-step fragment" data-fragment-index="7">
+            <div class="arch-step-num">07</div>
+            <div class="arch-step-label">Submission</div>
+            <div class="arch-step-service">Insurer Portal</div>
+          </div>
+        </div>
+        <div class="arch-note fragment" data-fragment-index="8">
+          <span class="text-muted">Each step updates DynamoDB in real-time</span>
+          <span class="arch-dot"></span>
+          <span class="text-muted">WebSocket pushes status to all dashboards</span>
+        </div>
+        <aside class="notes">
+          This is our 7-step agent pipeline. Each step is coordinated by a Python orchestrator that updates DynamoDB in real-time. The key differentiator is step 5 — memory retrieval. The system learns from every submission. Let me show you this in action.
+        </aside>
+      </section>
+
+      <!-- SLIDE 5: LIVE DEMO -->
+      <section data-state="demo-slide">
+        <div class="demo-container">
+          <h2 class="slide-heading demo-heading">Live Demo</h2>
+
+          <!-- Audio Player -->
+          <div class="demo-audio-card pi-card">
+            <div class="demo-audio-left">
+              <div class="demo-waveform" id="demo-waveform">
+                <div class="wave-bar" style="height:30%"></div>
+                <div class="wave-bar" style="height:60%"></div>
+                <div class="wave-bar" style="height:45%"></div>
+                <div class="wave-bar" style="height:80%"></div>
+                <div class="wave-bar" style="height:55%"></div>
+                <div class="wave-bar" style="height:90%"></div>
+                <div class="wave-bar" style="height:70%"></div>
+                <div class="wave-bar" style="height:40%"></div>
+                <div class="wave-bar" style="height:85%"></div>
+                <div class="wave-bar" style="height:50%"></div>
+                <div class="wave-bar" style="height:75%"></div>
+                <div class="wave-bar" style="height:35%"></div>
+                <div class="wave-bar" style="height:65%"></div>
+                <div class="wave-bar" style="height:45%"></div>
+                <div class="wave-bar" style="height:80%"></div>
+                <div class="wave-bar" style="height:55%"></div>
+                <div class="wave-bar" style="height:70%"></div>
+                <div class="wave-bar" style="height:40%"></div>
+                <div class="wave-bar" style="height:90%"></div>
+                <div class="wave-bar" style="height:60%"></div>
+              </div>
+              <div class="demo-audio-info">
+                <div class="demo-audio-filename">dr-smith-consultation.mp3</div>
+                <div class="demo-audio-meta">
+                  <span>Dr. Sarah Smith</span>
+                  <span class="meta-dot"></span>
+                  <span>Patient: John Doe</span>
+                  <span class="meta-dot"></span>
+                  <span>14:23</span>
+                </div>
+              </div>
+            </div>
+            <button class="pi-btn-primary demo-start-btn" id="demo-start-btn">
+              <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><polygon points="4,2 18,10 4,18"/></svg>
+              Process Recording
+            </button>
+          </div>
+
+          <!-- Pipeline Visualizer -->
+          <div class="demo-pipeline" id="demo-pipeline">
+            <div class="demo-pipe-connector"><div class="demo-pipe-fill" id="demo-pipe-fill"></div></div>
+            <div class="demo-pipe-step" data-step="1" id="demo-step-1">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">01</div>
+              <div class="demo-pipe-label">Transcribe</div>
+            </div>
+            <div class="demo-pipe-step" data-step="2" id="demo-step-2">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">02</div>
+              <div class="demo-pipe-label">Extract</div>
+            </div>
+            <div class="demo-pipe-step" data-step="3" id="demo-step-3">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">03</div>
+              <div class="demo-pipe-label">Determine</div>
+            </div>
+            <div class="demo-pipe-step" data-step="4" id="demo-step-4">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">04</div>
+              <div class="demo-pipe-label">Select Form</div>
+            </div>
+            <div class="demo-pipe-step" data-step="5" id="demo-step-5">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">05</div>
+              <div class="demo-pipe-label">Memory</div>
+            </div>
+            <div class="demo-pipe-step" data-step="6" id="demo-step-6">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">06</div>
+              <div class="demo-pipe-label">Populate</div>
+            </div>
+            <div class="demo-pipe-step" data-step="7" id="demo-step-7">
+              <div class="demo-pipe-indicator"></div>
+              <div class="demo-pipe-num">07</div>
+              <div class="demo-pipe-label">Submit</div>
+            </div>
+          </div>
+
+          <!-- Output Panel -->
+          <div class="demo-output pi-card" id="demo-output">
+            <div class="demo-output-placeholder" id="demo-output-placeholder">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span>Click "Process Recording" to start the pipeline</span>
+            </div>
+            <div class="demo-output-content" id="demo-output-content"></div>
+          </div>
+        </div>
+        <aside class="notes">
+          Let me show you this in action. I'm going to upload a recording of Dr. Smith discussing ACL reconstruction surgery for patient John Doe. Watch how each step processes and extracts information in real-time.
+        </aside>
+      </section>
+
+      <!-- SLIDE 6: Physician Dashboard -->
+      <section>
+        <h2 class="slide-heading">Physician Dashboard</h2>
+        <p class="slide-subheading">Dead simple — upload, select, submit</p>
+        <div class="portal-sim">
+          <div class="portal-nav">
+            <div class="portal-nav-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#55cc58" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" stroke="#55cc58" stroke-width="1.5"/></svg>
+              Prior Auth Bot
+            </div>
+            <div class="portal-nav-links">
+              <span class="portal-nav-link active">Physician Dashboard</span>
+              <span class="portal-nav-link">Pipeline</span>
+              <span class="portal-nav-link">Insurer Portal</span>
+            </div>
+          </div>
+          <div class="portal-body">
+            <div class="portal-grid-2">
+              <div class="portal-section">
+                <div class="pi-label" style="margin-bottom:12px">New Prior Authorization</div>
+                <div class="pi-card portal-upload-zone">
+                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div style="color:rgba(255,255,255,0.5);font-size:13px;margin-top:8px">Drag and drop audio file or click to browse</div>
+                  <div class="portal-file-selected">
+                    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#55cc58" stroke-width="1.5"><polyline points="3,8 7,12 13,4"/></svg>
+                    dr-smith-consultation.mp3
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+                  <div>
+                    <div class="pi-label" style="font-size:11px;margin-bottom:6px">Patient</div>
+                    <div class="pi-input portal-select">John Doe <span class="select-arrow">&#9662;</span></div>
+                  </div>
+                  <div>
+                    <div class="pi-label" style="font-size:11px;margin-bottom:6px">Physician</div>
+                    <div class="pi-input portal-select">Dr. Sarah Smith <span class="select-arrow">&#9662;</span></div>
+                  </div>
+                </div>
+                <button class="pi-btn-primary" style="width:100%;margin-top:16px">Submit Prior Authorization</button>
+              </div>
+              <div class="portal-section">
+                <div class="pi-label" style="margin-bottom:12px">Recent Requests</div>
+                <div class="portal-request-list">
+                  <div class="pi-card portal-request-item">
+                    <div class="portal-req-top">
+                      <span class="portal-req-patient">John Doe</span>
+                      <span class="pi-badge badge-pending">Pending Review</span>
+                    </div>
+                    <div class="portal-req-detail">ACL Reconstruction &middot; Aetna &middot; Apr 19, 2026</div>
+                  </div>
+                  <div class="pi-card portal-request-item">
+                    <div class="portal-req-top">
+                      <span class="portal-req-patient">Maria Garcia</span>
+                      <span class="pi-badge badge-approved">Approved</span>
+                    </div>
+                    <div class="portal-req-detail">Physical Therapy (12 sessions) &middot; Blue Cross &middot; Apr 17, 2026</div>
+                  </div>
+                  <div class="pi-card portal-request-item">
+                    <div class="portal-req-top">
+                      <span class="portal-req-patient">Robert Chen</span>
+                      <span class="pi-badge badge-appealing">Appeal #2</span>
+                    </div>
+                    <div class="portal-req-detail">MRI Lumbar Spine &middot; UnitedHealth &middot; Apr 15, 2026</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          This is the physician's view. Dead simple — upload an audio file, pick the patient and doctor, click submit. The system handles everything else. They can track their requests in real-time below.
+        </aside>
+      </section>
+
+      <!-- SLIDE 7: Pipeline Dashboard -->
+      <section>
+        <h2 class="slide-heading">Pipeline Dashboard</h2>
+        <p class="slide-subheading">Real-time visibility into every stage</p>
+        <div class="portal-sim">
+          <div class="portal-nav">
+            <div class="portal-nav-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#55cc58" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" stroke="#55cc58" stroke-width="1.5"/></svg>
+              Prior Auth Bot
+            </div>
+            <div class="portal-nav-links">
+              <span class="portal-nav-link">Physician</span>
+              <span class="portal-nav-link active">Pipeline Dashboard</span>
+              <span class="portal-nav-link">Insurer Portal</span>
+            </div>
+          </div>
+          <div class="portal-body">
+            <div class="pipeline-stages">
+              <div class="pipeline-stage-row">
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">01</div>
+                  <div class="stage-name">Transcription</div>
+                  <div class="stage-count">0</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">02</div>
+                  <div class="stage-name">Entity Extraction</div>
+                  <div class="stage-count">1</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">03</div>
+                  <div class="stage-name">PA Determination</div>
+                  <div class="stage-count">0</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">04</div>
+                  <div class="stage-name">Form Selection</div>
+                  <div class="stage-count">0</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">05</div>
+                  <div class="stage-name">Memory</div>
+                  <div class="stage-count">0</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">06</div>
+                  <div class="stage-name">Population</div>
+                  <div class="stage-count">2</div>
+                </div>
+                <div class="pipeline-stage stage-green">
+                  <div class="stage-num">07</div>
+                  <div class="stage-name">Submission</div>
+                  <div class="stage-count">1</div>
+                </div>
+              </div>
+              <div class="pipeline-gradient-bar"></div>
+            </div>
+            <div class="portal-grid-2" style="margin-top:16px">
+              <div class="portal-section">
+                <div class="pi-label" style="margin-bottom:8px">Stage 06 — Form Population (2 active)</div>
+                <div class="pi-card portal-request-item">
+                  <div class="portal-req-top">
+                    <span class="portal-req-patient">John Doe</span>
+                    <span class="pi-badge badge-processing">Processing</span>
+                  </div>
+                  <div class="portal-req-detail">ACL Reconstruction &middot; Dr. Smith &middot; Attempt 1</div>
+                </div>
+                <div class="pi-card portal-request-item" style="margin-top:8px">
+                  <div class="portal-req-top">
+                    <span class="portal-req-patient">Lisa Park</span>
+                    <span class="pi-badge badge-appealing">Appeal #1</span>
+                  </div>
+                  <div class="portal-req-detail">Cardiac MRI &middot; Dr. Jones &middot; Attempt 2</div>
+                </div>
+              </div>
+              <div class="portal-section">
+                <div class="pi-label" style="margin-bottom:8px">AWS Health</div>
+                <div class="aws-health-list">
+                  <div class="aws-health-item"><span class="health-dot green"></span>DynamoDB <span class="health-ms">12ms</span></div>
+                  <div class="aws-health-item"><span class="health-dot green"></span>S3 <span class="health-ms">8ms</span></div>
+                  <div class="aws-health-item"><span class="health-dot green"></span>Bedrock <span class="health-ms">340ms</span></div>
+                  <div class="aws-health-item"><span class="health-dot green"></span>Transcribe <span class="health-ms">95ms</span></div>
+                  <div class="aws-health-item"><span class="health-dot green"></span>Textract <span class="health-ms">210ms</span></div>
+                  <div class="aws-health-item"><span class="health-dot green"></span>CloudWatch <span class="health-ms">18ms</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Operations teams get the pipeline dashboard. Every stage of the pipeline is visible. Green means healthy, red means there's an issue. You can drill into any stage to see what's in flight. The AWS health panel monitors every service dependency in real-time.
+        </aside>
+      </section>
+
+      <!-- SLIDE 8: Insurer Portal -->
+      <section>
+        <h2 class="slide-heading">Insurer Portal</h2>
+        <p class="slide-subheading">Review, approve, or reject — with structured feedback</p>
+        <div class="portal-sim">
+          <div class="portal-nav">
+            <div class="portal-nav-title">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#55cc58" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" stroke="#55cc58" stroke-width="1.5"/></svg>
+              Prior Auth Bot
+            </div>
+            <div class="portal-nav-links">
+              <span class="portal-nav-link">Physician</span>
+              <span class="portal-nav-link">Pipeline</span>
+              <span class="portal-nav-link active">Insurer Portal</span>
+            </div>
+          </div>
+          <div class="portal-body">
+            <div class="insurer-review-layout">
+              <div class="insurer-header">
+                <div>
+                  <span class="pi-label">PA Request</span>
+                  <span style="color:#fff;font-family:'JetBrains Mono',monospace;margin-left:8px">PA-2026-0419-001</span>
+                </div>
+                <span class="pi-badge badge-pending">Pending Review</span>
+              </div>
+              <div class="portal-grid-2" style="margin-top:12px">
+                <div>
+                  <div class="pi-label" style="font-size:11px;margin-bottom:8px">Patient Information</div>
+                  <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Name</span><span class="info-value">John Doe</span></div>
+                    <div class="info-item"><span class="info-label">DOB</span><span class="info-value">1990-06-15</span></div>
+                    <div class="info-item"><span class="info-label">Insurance</span><span class="info-value">Aetna</span></div>
+                    <div class="info-item"><span class="info-label">ID</span><span class="info-value">AET-1234567</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="pi-label" style="font-size:11px;margin-bottom:8px">Physician Information</div>
+                  <div class="info-grid">
+                    <div class="info-item"><span class="info-label">Name</span><span class="info-value">Dr. Sarah Smith</span></div>
+                    <div class="info-item"><span class="info-label">NPI</span><span class="info-value">9876543210</span></div>
+                    <div class="info-item"><span class="info-label">Specialty</span><span class="info-value">Orthopedic Surgery</span></div>
+                    <div class="info-item"><span class="info-label">Phone</span><span class="info-value">(555) 234-5678</span></div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:16px">
+                <div class="pi-label" style="font-size:11px;margin-bottom:8px">Treatments Requiring PA</div>
+                <div class="treatment-tags">
+                  <span class="treatment-tag">ACL Reconstruction Surgery</span>
+                  <span class="treatment-tag">Physical Therapy (24 sessions)</span>
+                </div>
+              </div>
+              <div class="insurer-actions" style="margin-top:16px">
+                <div class="pi-label" style="font-size:11px;margin-bottom:8px">Decision</div>
+                <div style="display:flex;gap:12px">
+                  <button class="pi-btn-approve">Approve</button>
+                  <button class="pi-btn-reject">Reject</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          And here's what the insurer sees. A clean portal where they review the PA request, see all supporting documentation, and approve or reject with one click. Their decision feeds back into our system immediately. If rejected, our self-improvement engine kicks in.
+        </aside>
+      </section>
+
+      <!-- SLIDE 9: Memory & Learning -->
+      <section>
+        <h2 class="slide-heading">Memory &amp; Learning</h2>
+        <p class="slide-subheading">The system gets smarter with every submission</p>
+        <div class="memory-diagram">
+          <div class="memory-center">
+            <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
+              <circle cx="24" cy="24" r="18" stroke="#55cc58" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <circle cx="24" cy="24" r="10" stroke="#55cc58" stroke-width="1.5"/>
+              <circle cx="24" cy="24" r="3" fill="#55cc58"/>
+            </svg>
+            <div class="memory-center-label">Semantic<br>Memory</div>
+          </div>
+          <div class="memory-tier fragment" data-fragment-index="1" style="--tier-angle:0deg;--tier-color:#55cc58">
+            <div class="memory-tier-card">
+              <div class="memory-tier-title">General</div>
+              <div class="memory-tier-desc">Universal PA best practices</div>
+              <div class="memory-tier-example">"Always include referring physician NPI on surgical PA forms"</div>
+            </div>
+          </div>
+          <div class="memory-tier fragment" data-fragment-index="2" style="--tier-angle:90deg;--tier-color:#3e77f1">
+            <div class="memory-tier-card">
+              <div class="memory-tier-title">Provider</div>
+              <div class="memory-tier-desc">Insurance-specific patterns</div>
+              <div class="memory-tier-example">"Aetna requires MRI report dates and radiologist signatures"</div>
+            </div>
+          </div>
+          <div class="memory-tier fragment" data-fragment-index="3" style="--tier-angle:180deg;--tier-color:#e8a838">
+            <div class="memory-tier-card">
+              <div class="memory-tier-title">Treatment</div>
+              <div class="memory-tier-desc">Procedure-specific learnings</div>
+              <div class="memory-tier-example">"ACL reconstruction requires documentation of failed conservative treatment"</div>
+            </div>
+          </div>
+          <div class="memory-tier fragment" data-fragment-index="4" style="--tier-angle:270deg;--tier-color:#c54ad8">
+            <div class="memory-tier-card">
+              <div class="memory-tier-title">Treatment + Provider</div>
+              <div class="memory-tier-desc">Highest specificity combination</div>
+              <div class="memory-tier-example">"Aetna ACL: minimum 6 weeks conservative treatment with PT trial dates"</div>
+            </div>
+          </div>
+        </div>
+        <div class="memory-tech fragment" data-fragment-index="5">
+          <span class="feature-tag">AWS Bedrock Titan Embeddings v2</span>
+          <span class="feature-tag">1024-dimensional vectors</span>
+          <span class="feature-tag">Cosine similarity RAG</span>
+          <span class="feature-tag">DynamoDB storage</span>
+        </div>
+        <aside class="notes">
+          This is what makes our system truly unique. We maintain a 4-tier memory system. Every approval and rejection teaches the system something. Memories are stored with 1024-dimensional vector embeddings and retrieved using semantic search. The system gets smarter with every submission.
+        </aside>
+      </section>
+
+      <!-- SLIDE 10: Self-Improvement -->
+      <section>
+        <h2 class="slide-heading">Self-Improvement</h2>
+        <p class="slide-subheading">Rejections become learning opportunities</p>
+        <div class="si-flow">
+          <div class="si-node si-submit fragment" data-fragment-index="1">
+            <div class="si-node-icon blue"></div>
+            <div>Submission</div>
+          </div>
+          <div class="si-arrow fragment" data-fragment-index="1">&#8594;</div>
+          <div class="si-node si-review fragment" data-fragment-index="1">
+            <div class="si-node-icon"></div>
+            <div>Insurer Review</div>
+          </div>
+          <div class="si-branch fragment" data-fragment-index="2">
+            <div class="si-branch-line approved"></div>
+            <div class="si-branch-line rejected"></div>
+          </div>
+          <div class="si-outcomes">
+            <div class="si-outcome-approved fragment" data-fragment-index="2">
+              <span class="pi-badge badge-approved">Approved</span>
+              <span class="si-outcome-arrow">&#8594;</span>
+              <span class="si-save-memory">Save to Memory</span>
+            </div>
+            <div class="si-outcome-rejected fragment" data-fragment-index="3">
+              <span class="pi-badge badge-rejected">Rejected</span>
+              <span class="si-outcome-arrow">&#8594;</span>
+              <span class="si-analyze">Analyze &amp; Fix</span>
+              <span class="si-outcome-arrow">&#8594;</span>
+              <span class="si-resubmit">Re-enter Step 3</span>
+            </div>
+          </div>
+        </div>
+        <div class="si-example fragment" data-fragment-index="4">
+          <div class="pi-card si-example-card">
+            <div class="si-attempt">
+              <span class="pi-badge badge-rejected">Attempt 1</span>
+              <div class="si-attempt-detail">
+                <strong>Rejected:</strong> "Insufficient documentation of conservative treatment failure"
+              </div>
+              <div class="si-attempt-fix">
+                <strong>Fix applied:</strong> Added PT trial dates (Oct 1 – Dec 20, 2025) with session count
+              </div>
+            </div>
+            <div class="si-divider"></div>
+            <div class="si-attempt">
+              <span class="pi-badge badge-approved">Attempt 2</span>
+              <div class="si-attempt-detail">
+                <strong>Approved</strong> — Learning saved as appeal_success memory
+              </div>
+              <div class="si-attempt-learning">
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#55cc58" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
+                "Aetna ACL: include PT trial dates with start/end dates and session count"
+              </div>
+            </div>
+          </div>
+          <div class="si-max-note">Up to 3 appeal attempts &middot; Exhausted rejections saved as anti-patterns</div>
+        </div>
+        <aside class="notes">
+          When a PA is rejected, the system doesn't just stop. It analyzes the rejection reasons, searches for similar past cases using semantic search, proposes fixes, and resubmits. On success, it saves what worked to memory so future submissions get it right the first time. After 3 failed attempts, the failure is saved as an anti-pattern.
+        </aside>
+      </section>
+
+      <!-- SLIDE 11: Tech Stack -->
+      <section>
+        <h2 class="slide-heading">AWS Architecture</h2>
+        <div class="aws-arch">
+          <div class="aws-row">
+            <div class="aws-section-label">AI / ML</div>
+            <div class="aws-services">
+              <div class="aws-svc aws-svc-ai">
+                <div class="aws-svc-name">Bedrock Claude</div>
+                <div class="aws-svc-role">Entity extraction, PA determination, form filling, appeals</div>
+              </div>
+              <div class="aws-svc aws-svc-ai">
+                <div class="aws-svc-name">Titan Embeddings v2</div>
+                <div class="aws-svc-role">1024-dim semantic vectors for memory RAG</div>
+              </div>
+              <div class="aws-svc aws-svc-ai">
+                <div class="aws-svc-name">Transcribe</div>
+                <div class="aws-svc-role">Speech-to-text transcription</div>
+              </div>
+              <div class="aws-svc aws-svc-ai">
+                <div class="aws-svc-name">Textract</div>
+                <div class="aws-svc-role">Form field extraction &amp; OCR</div>
+              </div>
+            </div>
+          </div>
+          <div class="aws-row">
+            <div class="aws-section-label">Storage</div>
+            <div class="aws-services">
+              <div class="aws-svc aws-svc-db">
+                <div class="aws-svc-name">DynamoDB</div>
+                <div class="aws-svc-role">pa_requests, pa_memories, pa_patients, pa_physicians, pa_scrape_cache</div>
+              </div>
+              <div class="aws-svc aws-svc-s3">
+                <div class="aws-svc-name">S3</div>
+                <div class="aws-svc-role">Audio uploads, blank forms, Textract output, completed forms</div>
+              </div>
+            </div>
+          </div>
+          <div class="aws-row">
+            <div class="aws-section-label">Compute</div>
+            <div class="aws-services">
+              <div class="aws-svc aws-svc-compute">
+                <div class="aws-svc-name">FastAPI</div>
+                <div class="aws-svc-role">REST API + WebSocket gateway on EC2</div>
+              </div>
+              <div class="aws-svc aws-svc-compute">
+                <div class="aws-svc-name">DynamoDB Streams</div>
+                <div class="aws-svc-role">Real-time status updates to dashboards</div>
+              </div>
+              <div class="aws-svc aws-svc-compute">
+                <div class="aws-svc-name">CloudWatch</div>
+                <div class="aws-svc-role">Metrics, alarms, health monitoring</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          Our AWS stack. The key creative uses: Bedrock Claude for form-aware entity extraction using Textract output as context, Titan Embeddings for semantic memory search, and DynamoDB Streams powering real-time WebSocket updates to all three dashboards. Every service is monitored through CloudWatch with custom alarms.
+        </aside>
+      </section>
+
+      <!-- SLIDE 12: Impact -->
+      <section>
+        <h2 class="slide-heading">Impact</h2>
+        <div class="impact-grid">
+          <div class="impact-col">
+            <div class="impact-col-header">Today</div>
+            <div class="impact-item fragment" data-fragment-index="1">
+              <div class="impact-metric">Minutes</div>
+              <div class="impact-was">not hours</div>
+              <div class="impact-detail">PA submission time</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="2">
+              <div class="impact-metric">Zero</div>
+              <div class="impact-was">manual form-filling</div>
+              <div class="impact-detail">Fully automated end-to-end</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="3">
+              <div class="impact-metric">Self-improving</div>
+              <div class="impact-was">accuracy</div>
+              <div class="impact-detail">Learns from every outcome</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="4">
+              <div class="impact-metric">3 dashboards</div>
+              <div class="impact-was">real-time visibility</div>
+              <div class="impact-detail">Every stakeholder informed</div>
+            </div>
+          </div>
+          <div class="impact-divider"></div>
+          <div class="impact-col">
+            <div class="impact-col-header">Future</div>
+            <div class="impact-item fragment" data-fragment-index="5">
+              <div class="impact-future-title">EHR Integration</div>
+              <div class="impact-detail">Epic FHIR APIs for seamless workflow</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="6">
+              <div class="impact-future-title">Predictive PA</div>
+              <div class="impact-detail">Anticipate requirements before the appointment</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="7">
+              <div class="impact-future-title">Multi-Provider</div>
+              <div class="impact-detail">Scale across all major insurance providers</div>
+            </div>
+            <div class="impact-item fragment" data-fragment-index="8">
+              <div class="impact-future-title">Compliance Analytics</div>
+              <div class="impact-detail">Automated reporting and audit trails</div>
+            </div>
+          </div>
+        </div>
+        <aside class="notes">
+          The impact is dramatic. What takes physicians 34 hours per week can be done in minutes. And the system only gets better over time. Looking forward, we see integration with existing EHR systems through FHIR APIs and predictive capabilities that anticipate PA requirements before the appointment even happens.
+        </aside>
+      </section>
+
+      <!-- SLIDE 13: Q&A -->
+      <section>
+        <div class="title-slide">
+          <h1 class="title-gradient" style="font-size:2.5em">Prior Auth Bot</h1>
+          <div class="qa-text">Questions?</div>
+          <div class="qa-links">
+            <span class="feature-tag">7-Step AI Pipeline</span>
+            <span class="feature-tag">Semantic Memory</span>
+            <span class="feature-tag">Self-Improving Appeals</span>
+            <span class="feature-tag">3 Real-Time Dashboards</span>
+          </div>
+        </div>
+        <aside class="notes">
+          Thank you. We're happy to dive deeper into any aspect of the system — the pipeline, the memory system, the AWS architecture, or run the demo again.
+        </aside>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script src="demo.js"></script>
+</body>
+</html>

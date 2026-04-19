@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    background-color: #0e0e0e;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  * {
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+  ::selection {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+}
+
+@layer components {
+  .pi-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .pi-card-hover {
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pi-card-hover:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .pi-nav {
+    background: rgba(14, 14, 14, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+  }
+
+  .pi-input {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif;
+    padding: 10px 14px;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    width: 100%;
+  }
+  .pi-input:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .pi-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .pi-btn-primary {
+    background: #ffffff;
+    color: #0e0e0e;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    padding: 10px 24px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+  .pi-btn-primary:hover {
+    opacity: 0.9;
+  }
+  .pi-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pi-btn-secondary {
+    background: transparent;
+    color: #ffffff;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    padding: 8px 16px;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                background 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .pi-btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .pi-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.50);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 500;
+  }
+
+  .pi-heading {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: #ffffff;
+  }
+
+  .pi-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .pi-step-number {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.44);
+    font-weight: 400;
+  }
+}

@@ -71,7 +71,7 @@ Principle: **the spec that writes to a resource owns its creation. Consumers hol
 | **S3: `pa-textract-output`** | `document_download` | `document_population` | Structure: `/{provider_name}/{form_name}.json` |
 | **S3: `pa-completed-forms`** | `document_population` | `document_courier`, dashboards | Structure: `/{attempt_hash}/1.pdf, 2.pdf, ...` |
 | **AWS Transcribe** | `speech_to_text` | — | Sole user |
-| **AWS Comprehend Medical** | `agent_pipeline` (Step 1) | — | InferRxNorm, InferSNOMEDCT, DetectEntitiesV2 |
+| **AWS Bedrock (Claude)** | `agent_pipeline` (Step 1) | — | Form-aware entity extraction from transcripts |
 | **AWS Textract** | `document_download` | — | Runs on blank forms to extract field structure |
 | **Amazon SES** | `document_courier` | — | Send emails + receive rejection replies |
 | **SQS: `pa-ses-responses`** | `document_courier` | `self_improvement` | SES incoming notifications land here |

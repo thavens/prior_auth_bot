@@ -20,7 +20,7 @@ These blocks are a **snapshot** taken at request creation. All downstream steps 
 
 Extract anything from the appointment transcript and patient data that may require prior authorization — prescriptions, surgeries, and therapies. Cast a wide net because downstream steps determine what actually requires prior authorization.
 
-**AWS Services:** Comprehend Medical, InferRxNorm, InferSNOMEDCT, DetectEntitiesV2
+**AWS Services:** Bedrock (Claude) — form-aware entity extraction; S3 (form context from Textract output)
 **Input:** Transcript from [Speech to Text](speech_to_text.md), patient snapshot from pa_request
 **Output:** List of candidate treatments
 
@@ -86,7 +86,7 @@ Step 1 → Step 2 → Step 3 → Step 4 → Step 5 → Step 6 → Step 7
 This spec owns:
 - **DynamoDB: `pa_requests`** — Central pipeline state table. Every step reads and updates this record.
 - **DynamoDB Streams** on `pa_requests` — Powers real-time WebSocket updates to dashboards.
-- **AWS Comprehend Medical** — InferRxNorm, InferSNOMEDCT, DetectEntitiesV2 (used in Step 1).
+- **AWS Bedrock** — Claude entity extraction with form-aware context (used in Step 1).
 
 This spec reads from (Step 0 hydration only):
 - **DynamoDB: `pa_patients`** (owned by [Patient Data](patient_data.md)) — Copies patient fields into the pa_request snapshot.
