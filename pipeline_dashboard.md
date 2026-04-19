@@ -36,3 +36,20 @@ This is the specification for the dashboard to be created for the prior authoriz
 3. There should be a module that shows the health of all the databases.
 4. Add anything else that a dashboard like this should have. The main thing is that when an error occurs, it should appear in this dashboard and be associated with the corresponding AWS element that failed.
 5. The Pipeline Visualizer uses this to show which stages of the pipeline are green or red, and a summary of the error when clicked on when red.
+
+## AWS Ownership
+
+This spec owns:
+- **CloudWatch Metrics/Alarms** — Defines custom metrics, alarm thresholds, and aggregation rules for all AWS components. Individual services publish metrics to CloudWatch; this dashboard defines what gets monitored and alerted on.
+
+This spec reads from:
+- **DynamoDB Streams** (on `pa_requests`, owned by [Agent Pipeline](agent_pipeline.md)) — Powers real-time WebSocket updates for the pipeline visualizer.
+- **DynamoDB: `pa_requests`** (owned by [Agent Pipeline](agent_pipeline.md)) — For PA search and pipeline stage views.
+- **S3: `pa-completed-forms`** (owned by [Document Population](document_population.md)) — For PDF viewing in the PA Visualizer.
+
+## API Integration
+
+Communicates with the backend via:
+- **REST**: `GET /pa-requests` (search), `GET /pa-requests/:id` (detail)
+- **WebSocket**: `WS /ws/pa-status` (real-time pipeline stage updates)
+- **REST**: `GET /aws/health` (CloudWatch metrics aggregation)

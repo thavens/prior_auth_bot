@@ -20,3 +20,21 @@ The purpose of this specification is to design a dashboard for physicians to int
 
 ## Prior Authorization Visualizer (physician version)
 1. This visualizer is the same as specified in [Pipeline Dashboard](pipeline_dashboard.md); however, it should return to the physicians' dashboard, of course.
+
+## AWS Dependencies
+
+This spec reads from:
+- **DynamoDB: `pa_requests`** (owned by [Agent Pipeline](agent_pipeline.md)) — For PA search and visualization.
+- **S3: `pa-completed-forms`** (owned by [Document Population](document_population.md)) — For PDF viewing in the PA Visualizer.
+
+Audio uploads are written to:
+- **S3: `pa-audio-uploads`** (owned by [Speech to Text](speech_to_text.md)) — Via the FastAPI upload endpoint.
+
+## API Integration
+
+Communicates with the backend via:
+- **REST**: `POST /pa-requests` (upload audio + start pipeline, multipart form with audio file + patient_id + physician_id)
+- **REST**: `GET /pa-requests?patient=...&physician=...` (search)
+- **REST**: `GET /pa-requests/:id` (detail with full PA context)
+- **REST**: `GET /pa-requests/:id/documents/:attempt_hash/:doc_number` (PDF download)
+- **WebSocket**: `WS /ws/pa-status` (real-time status updates)

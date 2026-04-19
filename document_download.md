@@ -27,3 +27,14 @@ Document bucket structure should have a folder in the root dir for each insuranc
 ## Textract S3 Structure
 
 Textract output bucket should also have this structure where the documents are foldered by provider.
+
+## AWS Ownership
+
+This spec owns:
+- **S3: `pa-blank-forms`** — Stores downloaded blank PA forms. Structure: `/{provider_name}/{form_name}.pdf`
+- **S3: `pa-textract-output`** — Stores Textract analysis results. Structure: `/{provider_name}/{form_name}.json`
+- **AWS Textract** — Runs document analysis on blank forms to extract field structure.
+
+These buckets are read by:
+- [Document Population](document_population.md) — To retrieve blank forms and Textract data for filling.
+- [Search Service](search_service.md) — To list available forms for form search.

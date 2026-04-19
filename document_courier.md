@@ -11,3 +11,33 @@ Sends completed prior authorization applications and receives responses from ins
 ## Email Service
 
 Use Amazon SES to send prior authorization email requests. Take responses from Amazon SES and feed rejection reasons back into the [Self Improvement](self_improvement.md) pipeline for appeal.
+
+## AWS Ownership
+
+This spec owns:
+- **Amazon SES** — Sends PA emails and receives insurer responses.
+- **SQS: `pa-ses-responses`** — SES incoming email notifications land here for async processing.
+
+This spec reads from:
+- **S3: `pa-completed-forms`** (owned by [Document Population](document_population.md)) — To attach completed forms to outgoing emails.
+
+SQS is consumed by:
+- [Self Improvement](self_improvement.md) — Reads rejection messages from the queue.
+
+## Submission Result Schema (to Agent Pipeline Step 7)
+
+```json
+{
+  "submission_id": "sub_m1n2o3",
+  "delivery_method": "email",
+  "delivery_details": {
+    "ses_message_id": "0100018f-1234-5678-abcd-example",
+    "recipient_email": "pa-submissions@medi-calrx.dhcs.ca.gov",
+    "sender_email": "pa-bot@ourclinic.example.com",
+    "subject": "Prior Authorization Request - Jane Doe - MC-9876543 - adalimumab",
+    "attachment_s3_key": "pa-completed-forms/att_x7y8z9/1.pdf"
+  },
+  "submitted_at": "2026-04-19T14:35:00Z",
+  "status": "sent"
+}
+```

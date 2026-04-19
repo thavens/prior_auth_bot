@@ -9,3 +9,21 @@ Converts doctor appointment recordings into text transcripts for the [Agent Pipe
 
 **Input:** Audio file (from [Physician Dashboard](physician_dashboard.md) recording submission)
 **Output:** Text transcript (consumed by Agent Pipeline Step 1)
+
+## AWS Ownership
+
+This spec owns:
+- **S3: `pa-audio-uploads`** — Stores uploaded audio files and transcripts. Structure: `/{pa_request_id}/appointment.wav`, `/{pa_request_id}/transcript.json`
+- **AWS Transcribe** — Creates and manages transcription jobs.
+
+## Output Schema
+
+```json
+{
+  "transcript_text": "Patient presents with persistent lower back pain...",
+  "transcript_s3_key": "pa-audio-uploads/pr_a1b2c3d4/transcript.json",
+  "language_code": "en-US",
+  "confidence": 0.94,
+  "duration_seconds": 847
+}
+```
