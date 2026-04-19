@@ -416,7 +416,7 @@ Reveal.initialize({
   hash: true,
   width: 1920,
   height: 1080,
-  margin: 0.06,
+  margin: 0,
   center: true,
   transition: 'slide',
   backgroundTransition: 'fade',

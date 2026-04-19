@@ -203,16 +203,22 @@ export default function PAVisualizer({ paRequest, backPath }: PAVisualizerProps)
           <div className="pi-card p-6">
             <h3 className="pi-label mb-4">Completed Documents</h3>
             <div className="space-y-3">
-              {pa.completed_form_s3_keys.map((_key: string, i: number) => (
-                <Link
-                  key={i}
-                  to={`/pa/${pa.pa_request_id}/pdf/${pa.attempt_hash}/${i}`}
-                  className="flex items-center gap-4 border border-pi-border-card p-4 hover:border-pi-border-hover hover:-translate-y-1 transition-all duration-150 ease-pi"
-                >
-                  <span className="font-mono text-pi-subtle text-sm">[PDF]</span>
-                  <span className="text-pi-body font-mono text-sm hover:text-white">Document {i + 1}</span>
-                </Link>
-              ))}
+              {pa.completed_form_s3_keys.map((key: string, i: number) => {
+                const stripped = key.replace('pa-completed-forms/', '').replace('.pdf', '');
+                const parts = stripped.split('/');
+                const hash = parts[0] || pa.attempt_hash;
+                const num = parseInt(parts[1], 10) || (i + 1);
+                return (
+                  <Link
+                    key={i}
+                    to={`/pa/${pa.pa_request_id}/pdf/${hash}/${num}`}
+                    className="flex items-center gap-4 border border-pi-border-card p-4 hover:border-pi-border-hover hover:-translate-y-1 transition-all duration-150 ease-pi"
+                  >
+                    <span className="font-mono text-pi-subtle text-sm">[PDF]</span>
+                    <span className="text-pi-body font-mono text-sm hover:text-white">Document {i + 1}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

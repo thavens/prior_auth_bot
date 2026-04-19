@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prior Auth Bot — AWS Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0e0e0e;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.15);
+      --text: #ffffff;
+      --body: rgba(255,255,255,0.88);
+      --muted: rgba(255,255,255,0.50);
+      --subtle: rgba(255,255,255,0.35);
+      --green: #55cc58;
+      --blue: #3e77f1;
+      --orange: #e8a838;
+      --purple: #c54ad8;
+      --red: #c52626;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--body);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .diagram {
+      position: relative;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 32px 60px;
+    }
+
+    .diagram-title {
+      text-align: center;
+      margin-bottom: 8px;
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .diagram-subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+
+    /* ===== SVG LINES ===== */
+    #lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== ROW LABELS ===== */
+    .row {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 40px;
+    }
+
+    .row-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--subtle);
+      margin-bottom: 14px;
+      padding-left: 4px;
+    }
+
+    /* ===== NODES ===== */
+    .nodes {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .node {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+      min-width: 140px;
+      max-width: 200px;
+      flex: 1;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .node:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 20px rgba(255,255,255,0.03);
+    }
+
+    .node-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .node-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .node-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Color accents */
+    .node.accent-green { border-left: 3px solid var(--green); }
+    .node.accent-blue { border-left: 3px solid var(--blue); }
+    .node.accent-orange { border-left: 3px solid var(--orange); }
+    .node.accent-purple { border-left: 3px solid var(--purple); }
+    .node.accent-red { border-left: 3px solid var(--red); }
+
+    .node.highlight-green { border-color: rgba(85,204,88,0.3); background: rgba(85,204,88,0.04); }
+    .node.highlight-blue { border-color: rgba(62,119,241,0.3); background: rgba(62,119,241,0.04); }
+    .node.highlight-orange { border-color: rgba(232,168,56,0.3); background: rgba(232,168,56,0.04); }
+    .node.highlight-purple { border-color: rgba(197,74,216,0.3); background: rgba(197,74,216,0.04); }
+
+    /* ===== PIPELINE ROW ===== */
+    .pipeline-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pipe-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+      min-width: 110px;
+      flex: 1;
+      max-width: 155px;
+    }
+
+    .pipe-num {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .pipe-name {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    .pipe-svc {
+      font-size: 10px;
+      color: var(--subtle);
+      margin-top: 3px;
+    }
+
+    .pipe-arrow {
+      color: var(--subtle);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ===== SERVICE GROUPS ===== */
+    .service-groups {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .service-group {
+      background: rgba(255,255,255,0.015);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .group-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .svc-item {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .svc-item:last-child { border-bottom: none; }
+
+    .svc-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .svc-detail {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+
+    .svc-resource {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--subtle);
+      margin-top: 3px;
+    }
+
+    /* ===== DYNAMO TABLE LIST ===== */
+    .table-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .table-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .table-chip-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ===== BUCKET LIST ===== */
+    .bucket-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      margin: 2px;
+      background: rgba(232,168,56,0.08);
+      border: 1px solid rgba(232,168,56,0.2);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--orange);
+    }
+
+    /* ===== CONNECTOR BADGE ===== */
+    .connector-label {
+      position: absolute;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--subtle);
+      background: var(--bg);
+      padding: 1px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* ===== CENTRAL API NODE ===== */
+    .api-node {
+      background: rgba(85,204,88,0.06);
+      border: 1px solid rgba(85,204,88,0.25);
+      border-radius: 12px;
+      padding: 18px 32px;
+      text-align: center;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin: 0 auto;
+    }
+
+    .api-node .node-name { font-size: 15px; color: var(--green); }
+    .api-node .node-desc { font-size: 11px; }
+
+    .center-flex {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ===== LEGEND ===== */
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    .legend-line {
+      width: 24px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    /* ===== FLOW LABELS ===== */
+    .flow-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.03em;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .service-groups { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .service-groups { grid-template-columns: 1fr; }
+      .pipeline-row { flex-direction: column; }
+      .pipe-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="diagram">
+    <h1 class="diagram-title">Prior Auth Bot — AWS Architecture</h1>
+    <p class="diagram-subtitle">End-to-end AI pipeline on AWS with real-time dashboards and self-improving memory</p>
+
+    <svg id="lines"></svg>
+
+    <!-- ROW 1: Frontend -->
+    <div class="row">
+      <div class="row-label">Frontend — React SPA</div>
+      <div class="nodes">
+        <div class="node highlight-green" id="n-physician">
+          <span class="node-icon">&#x1F3E5;</span>
+          <div class="node-name">Physician Dashboard</div>
+          <div class="node-desc">Upload audio, select patient, submit PA requests</div>
+        </div>
+        <div class="node highlight-blue" id="n-pipeline-dash">
+          <span class="node-icon">&#x1F4CA;</span>
+          <div class="node-name">Pipeline Dashboard</div>
+          <div class="node-desc">Real-time stage counts, AWS health monitoring</div>
+        </div>
+        <div class="node highlight-orange" id="n-insurer">
+          <span class="node-icon">&#x1F4CB;</span>
+          <div class="node-name">Insurer Portal</div>
+          <div class="node-desc">Review requests, approve/reject with feedback</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: API Gateway -->
+    <div class="row">
+      <div class="row-label">Application Layer — EC2</div>
+      <div class="center-flex">
+        <div class="api-node" id="n-api">
+          <div class="node-name">FastAPI + WebSocket Gateway</div>
+          <div class="node-desc">REST API &bull; WebSocket real-time updates &bull; Static SPA serving</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Pipeline -->
+    <div class="row">
+      <div class="row-label">7-Step Agent Pipeline</div>
+      <div class="pipeline-row" id="pipeline-row">
+        <div class="pipe-step" id="p-1">
+          <div class="pipe-num">01</div>
+          <div class="pipe-name">Transcribe</div>
+          <div class="pipe-svc">AWS Transcribe</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-2">
+          <div class="pipe-num">02</div>
+          <div class="pipe-name">Extract</div>
+          <div class="pipe-svc">Bedrock Claude</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-3">
+          <div class="pipe-num">03</div>
+          <div class="pipe-name">PA Check</div>
+          <div class="pipe-svc">Claude + Web</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-4">
+          <div class="pipe-num">04</div>
+          <div class="pipe-name">Form Select</div>
+          <div class="pipe-svc">S3 + Claude</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-5">
+          <div class="pipe-num">05</div>
+          <div class="pipe-name">Memory</div>
+          <div class="pipe-svc">Titan + RAG</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-6">
+          <div class="pipe-num">06</div>
+          <div class="pipe-name">Populate</div>
+          <div class="pipe-svc">Claude + PyMuPDF</div>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step" id="p-7">
+          <div class="pipe-num">07</div>
+          <div class="pipe-name">Submit</div>
+          <div class="pipe-svc">Portal Courier</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4: AWS Services -->
+    <div class="row">
+      <div class="row-label">AWS Services</div>
+      <div class="service-groups">
+
+        <!-- AI/ML -->
+        <div class="service-group" id="g-ai">
+          <div class="group-header">
+            <div class="group-dot" style="background:var(--blue)"></div>
+            <div class="group-title">AI / ML</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">Bedrock Claude Sonnet</div>
+            <div class="svc-detail">Entity extraction, PA determination, form filling, appeals analysis</div>
+            <div class="svc-resource">claude-sonnet-4-20250514-v1:0</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">Titan Embeddings v2</div>
+            <div class="svc-detail">1024-dim vectors for semantic memory search &amp; RAG retrieval</div>
+            <div class="svc-resource">amazon.titan-embed-text-v2:0</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">AWS Transcribe</div>
+            <div class="svc-detail">Speech-to-text for appointment audio recordings</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">AWS Textract</div>
+            <div class="svc-detail">Form field extraction &amp; OCR from blank PA PDFs</div>
+          </div>
+        </div>
+
+        <!-- S3 Storage -->
+        <div class="service-group" id="g-s3">
+          <div class="group-header">
+            <div class="group-dot" style="background:var(--orange)"></div>
+            <div class="group-title">S3 Storage</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">4 Active Buckets</div>
+            <div class="svc-detail">Audio uploads, blank forms, Textract output, completed forms</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+            <span class="bucket-tag">pa-audio-uploads</span>
+            <span class="bucket-tag">pa-blank-forms</span>
+            <span class="bucket-tag">pa-textract-output</span>
+            <span class="bucket-tag">pa-completed-forms</span>
+          </div>
+          <div class="svc-item" style="margin-top:10px">
+            <div class="svc-detail"><strong style="color:var(--body)">Flow:</strong> Audio &rarr; Transcribe output &rarr; Blank forms &rarr; Textract JSON &rarr; Filled PDFs</div>
+          </div>
+        </div>
+
+        <!-- DynamoDB -->
+        <div class="service-group" id="g-dynamo">
+          <div class="group-header">
+            <div class="group-dot" style="background:var(--green)"></div>
+            <div class="group-title">DynamoDB</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">5 Tables + Streams</div>
+            <div class="svc-detail">Central state store with real-time change streaming</div>
+          </div>
+          <div class="table-list">
+            <div class="table-chip"><div class="table-chip-dot" style="background:var(--green)"></div>pa_requests &mdash; pipeline state</div>
+            <div class="table-chip"><div class="table-chip-dot" style="background:var(--blue)"></div>pa_memories &mdash; RAG vectors</div>
+            <div class="table-chip"><div class="table-chip-dot" style="background:var(--orange)"></div>pa_scrape_cache &mdash; TTL cache</div>
+            <div class="table-chip"><div class="table-chip-dot" style="background:var(--purple)"></div>pa_patients &mdash; patient records</div>
+            <div class="table-chip"><div class="table-chip-dot" style="background:var(--muted)"></div>pa_physicians &mdash; physician records</div>
+          </div>
+          <div class="svc-item" style="margin-top:8px">
+            <div class="svc-detail"><strong style="color:var(--green)">Streams:</strong> pa_requests emits change events &rarr; WebSocket broadcast</div>
+          </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="service-group" id="g-monitor">
+          <div class="group-header">
+            <div class="group-dot" style="background:var(--purple)"></div>
+            <div class="group-title">Monitoring</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">CloudWatch</div>
+            <div class="svc-detail">Custom namespace metrics, alarms, health probes for all services</div>
+            <div class="svc-resource">Namespace: PriorAuthBot</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">Health Endpoint</div>
+            <div class="svc-detail">Polls 4 S3 buckets + 5 DynamoDB tables every 30s, reports to Pipeline Dashboard</div>
+          </div>
+          <div class="svc-item">
+            <div class="svc-name">DynamoDB Streams</div>
+            <div class="svc-detail">Real-time INSERT/MODIFY events polled every 1s, broadcast to all WebSocket clients</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ROW 5: Self-Improvement Loop -->
+    <div class="row">
+      <div class="row-label">Self-Improvement Loop</div>
+      <div class="nodes" style="max-width:900px;margin:0 auto">
+        <div class="node accent-green" id="n-approved">
+          <div class="node-name" style="color:var(--green)">Approved</div>
+          <div class="node-desc">Save strategy to pa_memories with Titan embedding. Increment success_count on matching memories.</div>
+        </div>
+        <div class="node accent-red" id="n-rejected">
+          <div class="node-name" style="color:var(--red)">Rejected (up to 3x)</div>
+          <div class="node-desc">Analyze rejection via Claude, semantic search for similar failures, re-enter pipeline at Step 3 with fixes.</div>
+        </div>
+        <div class="node accent-orange" id="n-exhausted">
+          <div class="node-name" style="color:var(--orange)">Exhausted</div>
+          <div class="node-desc">After 3 failed appeals, save as anti-pattern memory to prevent future repetition.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-line" style="background:var(--green)"></div>
+        Data flow
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background:var(--blue)"></div>
+        AI/ML calls
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background:var(--orange)"></div>
+        Storage I/O
+      </div>
+      <div class="legend-item">
+        <div class="legend-line" style="background:var(--purple);border-style:dashed"></div>
+        Monitoring
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const svg = document.getElementById('lines');
+
+    function pos(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const sr = svg.getBoundingClientRect();
+      return {
+        cx: r.left + r.width / 2 - sr.left,
+        cy: r.top + r.height / 2 - sr.top,
+        top: r.top - sr.top,
+        bot: r.bottom - sr.top,
+        left: r.left - sr.left,
+        right: r.right - sr.left,
+        w: r.width,
+        h: r.height,
+      };
+    }
+
+    function drawLine(from, to, color, dashed) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', from.x);
+      line.setAttribute('y1', from.y);
+      line.setAttribute('x2', to.x);
+      line.setAttribute('y2', to.y);
+      line.setAttribute('stroke', color);
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('stroke-opacity', '0.35');
+      if (dashed) line.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(line);
+    }
+
+    function drawCurve(from, to, color, dashed) {
+      const midY = (from.y + to.y) / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const d = `M ${from.x} ${from.y} C ${from.x} ${midY}, ${to.x} ${midY}, ${to.x} ${to.y}`;
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', '1.5');
+      path.setAttribute('stroke-opacity', '0.3');
+      path.setAttribute('fill', 'none');
+      if (dashed) path.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(path);
+    }
+
+    function render() {
+      svg.innerHTML = '';
+      const diagRect = svg.parentElement.getBoundingClientRect();
+      svg.setAttribute('width', diagRect.width);
+      svg.setAttribute('height', diagRect.height);
+      svg.style.width = diagRect.width + 'px';
+      svg.style.height = diagRect.height + 'px';
+
+      const green = '#55cc58';
+      const blue = '#3e77f1';
+      const orange = '#e8a838';
+      const purple = '#c54ad8';
+
+      const api = pos('n-api');
+      const physician = pos('n-physician');
+      const pipelineDash = pos('n-pipeline-dash');
+      const insurer = pos('n-insurer');
+
+      if (!api || !physician) return;
+
+      // Frontend -> API
+      drawCurve({x: physician.cx, y: physician.bot}, {x: api.cx - 80, y: api.top}, green);
+      drawCurve({x: pipelineDash.cx, y: pipelineDash.bot}, {x: api.cx, y: api.top}, blue);
+      drawCurve({x: insurer.cx, y: insurer.bot}, {x: api.cx + 80, y: api.top}, orange);
+
+      // API -> Pipeline steps
+      const p1 = pos('p-1');
+      const p4 = pos('p-4');
+      const p7 = pos('p-7');
+      if (p1 && p4 && p7) {
+        drawCurve({x: api.cx, y: api.bot}, {x: p4.cx, y: p4.top}, green);
+      }
+
+      // Pipeline -> AWS Service Groups
+      const gAi = pos('g-ai');
+      const gS3 = pos('g-s3');
+      const gDynamo = pos('g-dynamo');
+      const gMonitor = pos('g-monitor');
+
+      if (p1 && gAi) {
+        drawCurve({x: p1.cx, y: p1.bot}, {x: gAi.cx, y: gAi.top}, blue);
+      }
+      if (p4 && gS3) {
+        drawCurve({x: p4.cx, y: p4.bot}, {x: gS3.cx, y: gS3.top}, orange);
+      }
+      if (p4 && gDynamo) {
+        drawCurve({x: p5cx(), y: pos('p-5').bot}, {x: gDynamo.cx, y: gDynamo.top}, green);
+      }
+      if (p7 && gMonitor) {
+        drawCurve({x: p7.cx, y: p7.bot}, {x: gMonitor.cx, y: gMonitor.top}, purple, true);
+      }
+
+      // DynamoDB Streams -> API (WebSocket)
+      if (gDynamo && api) {
+        drawCurve(
+          {x: gDynamo.right - 20, y: gDynamo.top},
+          {x: api.right, y: api.bot},
+          green, true
+        );
+      }
+
+      // Self-improvement loop -> Pipeline
+      const approved = pos('n-approved');
+      const rejected = pos('n-rejected');
+      if (rejected && p4) {
+        drawCurve(
+          {x: rejected.cx, y: rejected.top},
+          {x: pos('p-3').cx, y: pos('p-3').bot + 10},
+          '#c52626', true
+        );
+      }
+      if (approved && gDynamo) {
+        drawCurve(
+          {x: approved.cx, y: approved.top},
+          {x: gDynamo.cx - 30, y: gDynamo.bot},
+          green, true
+        );
+      }
+    }
+
+    function p5cx() {
+      const el = pos('p-5');
+      return el ? el.cx : 0;
+    }
+
+    window.addEventListener('load', () => { setTimeout(render, 100); });
+    window.addEventListener('resize', render);
+  </script>
+</body>
+</html>

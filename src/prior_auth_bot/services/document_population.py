@@ -1,5 +1,6 @@
 import io
 import json
+import re
 
 import fitz
 
@@ -8,6 +9,14 @@ from prior_auth_bot.models import (
     DocumentPopulationResult,
     FieldFillResults,
 )
+
+
+def _lenient_json_loads(text: str):
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        cleaned = re.sub(r",\s*([}\]])", r"\1", text)
+        return json.loads(cleaned)
 
 
 class DocumentPopulationService:
@@ -51,7 +60,7 @@ class DocumentPopulationService:
         widget_values = None
         filled_pdf = None
         attempt = 0
-        for attempt in range(1, 4):
+        for attempt in range(1, 5):
             try:
                 call_prompt = prompt if attempt == 1 else prompt + f"\n\nPrevious attempt failed with: {last_error}. Fix the JSON."
                 widget_values = self._call_llm(call_prompt)
@@ -59,8 +68,8 @@ class DocumentPopulationService:
                 break
             except (json.JSONDecodeError, KeyError, Exception) as e:
                 last_error = str(e)
-                if attempt == 3:
-                    raise RuntimeError(f"Document population failed after 3 attempts: {last_error}")
+                if attempt == 4:
+                    raise RuntimeError(f"Document population failed after 4 attempts: {last_error}")
 
         filled = sum(1 for v in widget_values.values() if v is not None)
         skipped = len(fields) - filled
@@ -224,7 +233,7 @@ class DocumentPopulationService:
             text = text.split("```json")[1].split("```")[0]
         elif "```" in text:
             text = text.split("```")[1].split("```")[0]
-        return json.loads(text.strip())
+        return _lenient_json_loads(text.strip())
 
     @staticmethod
     def _coerce_checkbox_value(value) -> bool:

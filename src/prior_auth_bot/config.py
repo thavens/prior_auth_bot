@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     ses_recipient_email: str = "michael.lavery.2017@gmail.com"
 
     # LLM
-    bedrock_model_id: str = "global.anthropic.claude-sonnet-4-20250514-v1:0"
-    bedrock_region: str = "us-east-1"
+    bedrock_model_id: str = "us.anthropic.claude-opus-4-6-v1"
+    bedrock_region: str = "us-west-2"
     bedrock_embedding_model_id: str = "amazon.titan-embed-text-v2:0"
 
     model_config = {"env_prefix": "PA_BOT_"}

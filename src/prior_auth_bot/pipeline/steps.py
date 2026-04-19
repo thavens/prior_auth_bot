@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 
 from prior_auth_bot.models import (
@@ -25,6 +26,43 @@ from prior_auth_bot.services.document_population import DocumentPopulationServic
 from prior_auth_bot.services.document_courier import EmailCourierService
 
 TRANSCRIPT_CHAR_LIMIT = 100_000
+
+
+def _lenient_json_loads(text: str):
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        cleaned = re.sub(r",\s*([}\]])", r"\1", text)
+        return json.loads(cleaned)
+
+
+def _invoke_and_parse(bedrock_client, model_id: str, prompt: str, max_tokens: int = 4096, max_retries: int = 4):
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        call_prompt = prompt if attempt == 1 else prompt + f"\n\nPrevious attempt returned invalid JSON: {last_error}. Return ONLY valid JSON."
+        body = json.dumps({
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": call_prompt}],
+        })
+        response = bedrock_client.invoke_model(
+            modelId=model_id,
+            body=body,
+            contentType="application/json",
+            accept="application/json",
+        )
+        result = json.loads(response["body"].read())
+        text = result["content"][0]["text"]
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0]
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0]
+        try:
+            return _lenient_json_loads(text.strip())
+        except json.JSONDecodeError as e:
+            last_error = str(e)
+            if attempt == max_retries:
+                raise
 
 
 def _get_block_text(block: dict, block_map: dict) -> str:
@@ -173,24 +211,7 @@ def step_1_entity_extraction(
         "JSON:"
     )
 
-    body = json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 4096,
-        "messages": [{"role": "user", "content": prompt}],
-    })
-    response = bedrock_client.invoke_model(
-        modelId=model_id,
-        body=body,
-        contentType="application/json",
-        accept="application/json",
-    )
-    result = json.loads(response["body"].read())
-    text_resp = result["content"][0]["text"]
-    if "```json" in text_resp:
-        text_resp = text_resp.split("```json")[1].split("```")[0]
-    elif "```" in text_resp:
-        text_resp = text_resp.split("```")[1].split("```")[0]
-    data = json.loads(text_resp.strip())
+    data = _invoke_and_parse(bedrock_client, model_id, prompt)
 
     raw_entities = data.get("entities", data) if isinstance(data, dict) else data
 
@@ -294,24 +315,7 @@ def step_2_pa_determination(
         "JSON:"
     )
 
-    body = json.dumps({
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 4096,
-        "messages": [{"role": "user", "content": prompt}],
-    })
-    response = bedrock_client.invoke_model(
-        modelId=model_id,
-        body=body,
-        contentType="application/json",
-        accept="application/json",
-    )
-    result = json.loads(response["body"].read())
-    text = result["content"][0]["text"]
-    if "```json" in text:
-        text = text.split("```json")[1].split("```")[0]
-    elif "```" in text:
-        text = text.split("```")[1].split("```")[0]
-    items = json.loads(text.strip())
+    items = _invoke_and_parse(bedrock_client, model_id, prompt)
 
     requiring = []
     not_requiring = []

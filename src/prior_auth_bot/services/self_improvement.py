@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -255,4 +256,8 @@ class SelfImprovementService:
             text = text.split("```json")[1].split("```")[0]
         elif "```" in text:
             text = text.split("```")[1].split("```")[0]
-        return json.loads(text.strip())
+        try:
+            return json.loads(text.strip())
+        except json.JSONDecodeError:
+            cleaned = re.sub(r",\s*([}\]])", r"\1", text.strip())
+            return json.loads(cleaned)

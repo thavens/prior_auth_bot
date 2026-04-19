@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 PROVIDER_URLS = {
-    "medi-cal": "https://medi-calrx.dhcs.ca.gov/provider/prior-authorization",
+    "medi-cal": "https://medi-calrx.dhcs.ca.gov/cms/medicalrx/static-assets/documents/provider/forms-and-information/Medi-Cal_Rx_PA_Request_Form.pdf",
 }
 
 PROVIDER_CDL_URLS = {
@@ -206,12 +206,58 @@ class SearchService:
         })
         return content[:50000]
 
-    def check_pa_requirements(self, provider: str, treatment: str) -> str:
-        result = ""
+    def _fetch_provider_pa_info(self, provider: str) -> str:
+        cache_key = f"{provider}:pa_form_text"
+        response = self.cache_table.get_item(Key={"cache_key": cache_key})
+        item = response.get("Item")
+        if item and item.get("ttl", 0) > int(time.time()):
+            return item["scraped_content"]
+
         url = PROVIDER_URLS.get(provider)
-        if url:
-            cache_key = f"{provider}:pa_requirements:{treatment}"
-            result = self.scrape_with_cache(cache_key, url)
+        if not url:
+            return ""
+
+        if url.lower().endswith(".pdf"):
+            try:
+                resp = httpx.get(url, timeout=60, follow_redirects=True)
+                resp.raise_for_status()
+            except httpx.HTTPError as exc:
+                logger.warning("Failed to fetch PA form from %s: %s", url, exc)
+                return ""
+            try:
+                import fitz
+                doc = fitz.open(stream=resp.content, filetype="pdf")
+                text_parts = [page.get_text() for page in doc]
+                doc.close()
+                content = "\n".join(text_parts)
+            except Exception as exc:
+                logger.warning("Failed to parse PA form PDF: %s", exc)
+                return ""
+        else:
+            try:
+                resp = httpx.get(url, timeout=30)
+                resp.raise_for_status()
+            except httpx.HTTPError as exc:
+                logger.warning("HTTP error scraping %s: %s", url, exc)
+                return ""
+            content = resp.text
+            if _looks_like_error_page(content):
+                logger.warning("Error page returned from %s, not caching", url)
+                return ""
+
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        self.cache_table.put_item(Item={
+            "cache_key": cache_key,
+            "url": url,
+            "scraped_content": content[:50000],
+            "scraped_at": datetime.now(timezone.utc).isoformat(),
+            "ttl": int(time.time()) + 86400 * 7,
+            "content_hash": f"sha256:{content_hash}",
+        })
+        return content[:50000]
+
+    def check_pa_requirements(self, provider: str, treatment: str) -> str:
+        result = self._fetch_provider_pa_info(provider)
 
         cdl_content = self._fetch_cdl_with_cache(provider)
         if cdl_content:
