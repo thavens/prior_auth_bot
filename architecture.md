@@ -4,13 +4,16 @@ Applying for prior authorization is a friction point for physicians and patients
 
 # Context
 
-We are trying to win a hackathon under the track of best use of AWS. This doesn’t mean use as mean services as possible but a genuinely creative and effective use of their products to solve a problem. Assume we have unlimited use of AWS so if you think any service is useful then implement it.  
+We are trying to win a hackathon under the track of best use of AWS. This doesn’t mean use as many services as possible but a genuinely creative and effective use of their products to solve a problem. Assume we have unlimited use of AWS so if you think any service is useful then implement it.  
 Example PA form: [https://medi-calrx.dhcs.ca.gov/cms/medicalrx/static-assets/documents/provider/forms-and-information/Medi-Cal\_Rx\_PA\_Request\_Form.pdf\#page=1.00\&gsr=0](https://medi-calrx.dhcs.ca.gov/cms/medicalrx/static-assets/documents/provider/forms-and-information/Medi-Cal_Rx_PA_Request_Form.pdf#page=1.00&gsr=0)
 
 # Requirements
 
 1. Self-improving system  
 2. Email service
+3. Document population
+4. Physician Dashboard
+5. Pipeline Dashboard
 
 ### Email Service
 
